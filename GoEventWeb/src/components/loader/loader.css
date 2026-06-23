@@ -1,0 +1,136 @@
+/* loader.css - Full screen loader styles */
+
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 50%, #121424 0%, #0b0d19 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  opacity: 1;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+  position: relative;
+}
+
+/* Spinner Outer ring */
+.loader-spinner-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  padding: 3px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  animation: loaderSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.loader-spinner-inner {
+  width: 100%;
+  height: 100%;
+  background-color: #0b0d19;
+  border-radius: 50%;
+}
+
+/* Logo placement at center of the spinner */
+.loader-logo-pulsar {
+  position: absolute;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: loaderPulse 1.8s ease-in-out infinite;
+}
+
+/* Text loading animation */
+.loader-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.loader-text-shimmer {
+  background: linear-gradient(90deg, #94a3b8 0%, #ffffff 50%, #94a3b8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: loaderTextShimmer 2s linear infinite;
+}
+
+/* Dots animation */
+.loader-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #a855f7;
+  border-radius: 50%;
+  display: inline-block;
+  animation: loaderDots 1.4s infinite both;
+}
+
+.loader-dot:nth-child(2) {
+  animation-delay: 0.2s;
+  background-color: #818cf8;
+}
+
+.loader-dot:nth-child(3) {
+  animation-delay: 0.4s;
+  background-color: #6366f1;
+}
+
+/* Keyframes */
+@keyframes loaderSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.4));
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.8));
+  }
+}
+
+@keyframes loaderTextShimmer {
+  to { background-position: 200% center; }
+}
+
+@keyframes loaderDots {
+  0% {
+    opacity: .2;
+    transform: translateY(0px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: .2;
+    transform: translateY(0px);
+  }
+}

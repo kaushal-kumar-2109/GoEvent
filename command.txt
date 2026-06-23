@@ -16,4 +16,5 @@
     => npm create vite@latest GoEventWeb -- --template react  
     => cd GoEventWeb
     => npm install
+    => npm i react-router-dom
     => npm run dev
