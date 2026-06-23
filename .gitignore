@@ -1,5 +1,7 @@
 .env
 node_modules/
+
+apiTest.http
 # Logs
 logs
 *.log
