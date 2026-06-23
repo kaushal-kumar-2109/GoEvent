@@ -1,7 +1,8 @@
 # baackend command used 
     => npm inti
-    => npm i bcrypt cors crypto dotenv express mongoose
+    => npm i bcrypt cors crypto dotenv express mongoose @faker-js/faker
     => npm i --save-dev nodemon
+    => npm run seed
 
 
 # git coomands used 

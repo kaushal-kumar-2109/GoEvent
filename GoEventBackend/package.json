@@ -10,11 +10,13 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
+    "seed": "node seeds/user.seed.js && node seeds/event.seed.js",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.5.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
