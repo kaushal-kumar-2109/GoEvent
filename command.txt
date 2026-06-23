@@ -1,0 +1,19 @@
+# baackend command used 
+    => npm inti
+    => npm i bcrypt cors crypto dotenv express mongoose
+    => npm i --save-dev nodemon
+
+
+# git coomands used 
+    => git init
+    => git add .
+    => git commit -m "Initial commit"
+    => git remote add origin <repository_url>
+    => git push -u origin main
+
+
+# frontend command used 
+    => npm create vite@latest GoEventWeb -- --template react  
+    => cd GoEventWeb
+    => npm install
+    => npm run dev
