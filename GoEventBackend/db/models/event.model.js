@@ -138,7 +138,17 @@ const EVENT = new mongoose.Schema({
         ],
         default: "draft",
         index: true
+    },
+    // other 
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
+
 });
 
 // Text Search

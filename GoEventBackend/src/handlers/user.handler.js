@@ -113,6 +113,7 @@ const SetUser = async (req, res) => {
     }
 }
 
+// -------------------------- for send otp to the provided email -------------------------- //
 const SendEmailOTP = async (req, res) => {
     try {
         const { email, tag } = req.body;

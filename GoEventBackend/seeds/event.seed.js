@@ -5,8 +5,8 @@ const { faker } = require("@faker-js/faker");
 const Event = require("../db/models/event.model.js");
 const User = require("../db/models/user.model.js");
 
-const MONGO_URI = process.env.MONGO_DB_URL || process.env.MONGO_DB_SRV_URL;  // databse url
-const nevent = 2000 // number event to create
+const MONGO_URI = process.env.MONGO_DB_URL || process.env.MONGO_DB_SRV_URL;  // database url
+const nevent = 2000; // number event to create
 
 const categories = [
     "Music",
@@ -69,18 +69,29 @@ async function seedEvents() {
             const organizer = randomItem(users);
             const location = randomItem(cities);
 
-            const startDate = faker.date.future();
+            // 1. Generate a random creation date within the past year
+            const createdAt = faker.date.past({ years: 1 });
+            const updatedAt = new Date(createdAt); // Match createdAt exactly
+
+            // 2. Schedule the event to start 7 to 30 days after its creation date
+            const startDate = new Date(
+                createdAt.getTime() + 
+                faker.number.int({ min: 7, max: 30 }) * 24 * 60 * 60 * 1000
+            );
+
+            // 3. Schedule the event to end 2 to 24 hours after it starts
             const endDate = new Date(
                 startDate.getTime() +
                 faker.number.int({ min: 2, max: 24 }) * 60 * 60 * 1000
             );
 
-            const comments = [];
+            // 4. Registration deadline is set 2 days before the event starts
+            const registrationDeadline = new Date(
+                startDate.getTime() - 2 * 24 * 60 * 60 * 1000
+            );
 
-            const commentCount = faker.number.int({
-                min: 0,
-                max: 10
-            });
+            const comments = [];
+            const commentCount = faker.number.int({ min: 0, max: 10 });
 
             for (let j = 0; j < commentCount; j++) {
                 comments.push({
@@ -91,11 +102,7 @@ async function seedEvents() {
             }
 
             const speakers = [];
-
-            const speakerCount = faker.number.int({
-                min: 0,
-                max: 5
-            });
+            const speakerCount = faker.number.int({ min: 0, max: 5 });
 
             for (let j = 0; j < speakerCount; j++) {
                 speakers.push({
@@ -108,11 +115,7 @@ async function seedEvents() {
             }
 
             const faqs = [];
-
-            const faqCount = faker.number.int({
-                min: 0,
-                max: 5
-            });
+            const faqCount = faker.number.int({ min: 0, max: 5 });
 
             for (let j = 0; j < faqCount; j++) {
                 faqs.push({
@@ -123,83 +126,42 @@ async function seedEvents() {
 
             events.push({
                 title: faker.company.catchPhrase(),
-
                 shortDescription: faker.lorem.sentence(),
-
                 description: faker.lorem.paragraphs(3),
-
                 category: randomItem(categories),
-
                 organizer: organizer._id,
-
                 organizerName: organizer.name,
-
                 bannerImage: `https://picsum.photos/1200/600?random=${i}`,
-
                 thumbnailImage: `https://picsum.photos/400/300?random=${i}`,
-
                 galleryImages: [
                     `https://picsum.photos/600/400?random=${i}1`,
                     `https://picsum.photos/600/400?random=${i}2`,
                     `https://picsum.photos/600/400?random=${i}3`
                 ],
-
                 promotionalVideo: faker.internet.url(),
-
                 eventMode: randomItem(eventModes),
-
                 venueName: faker.company.name(),
-
                 address: faker.location.streetAddress(),
-
                 city: location.city,
-
                 state: location.state,
-
                 country: "India",
-
                 pincode: faker.location.zipCode(),
-
-                googleMapsLink:
-                    "https://maps.google.com",
-
-                meetingLink:
-                    faker.internet.url(),
-
-                meetingPassword:
-                    faker.internet.password(),
-
+                googleMapsLink: "https://maps.google.com",
+                meetingLink: faker.internet.url(),
+                meetingPassword: faker.internet.password(),
+                
+                // Injected time logical fields
+                createdAt,
+                updatedAt,
                 startDate,
-
                 endDate,
+                registrationDeadline,
 
-                registrationDeadline:
-                    faker.date.soon(),
-
-                ticketPrice:
-                    faker.number.int({
-                        min: 0,
-                        max: 5000
-                    }),
-
-                availableSeats:
-                    faker.number.int({
-                        min: 20,
-                        max: 1000
-                    }),
-
-                contactEmail:
-                    faker.internet.email(),
-
-                contactPhone:
-                    `9${faker.number.int({
-                        min: 100000000,
-                        max: 999999999
-                    })}`,
-
-                website:
-                    faker.internet.url(),
-
+                ticketPrice: faker.number.int({ min: 0, max: 5000 }),
+                availableSeats: faker.number.int({ min: 20, max: 1000 }),
+                contactEmail: faker.internet.email(),
+                contactPhone: `9${faker.number.int({ min: 100000000, max: 999999999 })}`,
+                website: faker.internet.url(),
                 socialLinks: {
                     instagram: faker.internet.url(),
                     facebook: faker.internet.url(),
@@ -207,40 +169,19 @@ async function seedEvents() {
                     twitter: faker.internet.url(),
                     youtube: faker.internet.url()
                 },
-
                 speakers,
-
                 faqs,
-
-                refundPolicy:
-                    faker.lorem.paragraph(),
-
-                termsAndConditions:
-                    faker.lorem.paragraph(),
-
-                likes:
-                    faker.number.int({
-                        min: 0,
-                        max: 1000
-                    }),
-
+                refundPolicy: faker.lorem.paragraph(),
+                termsAndConditions: faker.lorem.paragraph(),
+                likes: faker.number.int({ min: 0, max: 1000 }),
                 comments,
-
-                registrationCount:
-                    faker.number.int({
-                        min: 0,
-                        max: 500
-                    }),
-
-                status:
-                    randomItem(statuses)
+                registrationCount: faker.number.int({ min: 0, max: 500 }),
+                status: randomItem(statuses)
             });
         }
 
         await Event.insertMany(events);
-
         console.log(`✅ Terminated Event Creating seed for create ${nevent} events`);
-
         process.exit(0);
     } catch (err) {
         console.log(`❌ Terminated Event Creating seed`);
