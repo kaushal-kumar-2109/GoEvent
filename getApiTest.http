@@ -1,2 +1,0 @@
-###  Get request fot the landing page events 
-GET http://localhost:3000/GoEvent/get/get-land-events HTTP/1.1

@@ -1,8 +1,16 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "./eventCard.css";
 
-const EventCard = ({data}) =>{
-    const event = data;
+const EventCard = ({ event }) => {
+    console.log(event);
+
+    const isoString = event.startDate;
+    const dateObj = new Date(isoString);
+    // Extract separate strings
+    const dateOnly = dateObj.toLocaleDateString(); // e.g., "7/7/2026"
+    // const timeOnly = dateObj.toLocaleTimeString(); // e.g., "3:49:56 PM"
+
     const [isFav, setIsFav] = useState(false);
 
     // Favorite button toggle
@@ -11,20 +19,20 @@ const EventCard = ({data}) =>{
     };
 
     return (
-        <div className="event-card">
+        <Link to={`/GoEvent/event/${event._id}`} className="event-card">
             {/* Event Card Top Image Container */}
             <div className="event-image-container">
-                <img src={event.image} alt={event.title} className="event-image" loading="lazy" />
-                  
+                <img src={event.bannerImage} alt={event.title} className="event-image" loading="lazy" />
+
                 {/* Floating Date Badge */}
                 <div className="event-date-badge">
-                    <span className="event-date-month">{event.month}</span>
-                    <span className="event-date-day">{event.day}</span>
+                    <span className="event-date-month">{dateOnly}</span>
+                    {/* <span className="event-date-day">{event.day}</span> */}
                 </div>
 
                 {/* Favorite toggle heart */}
-                <button 
-                    type="button" 
+                <button
+                    type="button"
                     className={`event-favorite-btn ${isFav ? 'active' : ''}`}
                     onClick={toggleFavorite}
                     aria-label="Add to favorites"
@@ -43,18 +51,28 @@ const EventCard = ({data}) =>{
                         <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
                         <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>{event.location}</span>
+                    <span>{event.address}</span>
                 </div>
-                  
+                <div className="event-location">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                        <path d="M13 5v2" />
+                        <path d="M13 17v2" />
+                        <path d="M13 11v2" />
+                    </svg>
+                    <span>{event.availableSeats}</span>
+                </div>
+
                 <div className="event-meta">
                     <div className="event-category-badge">
                         <span className="event-category-dot" style={{ backgroundColor: event.color }}></span>
                         <span>{event.category}</span>
                     </div>
-                    <span className="event-price">{event.price}</span>
+                    <div className="event-category-badge"><span>{event.eventMode}</span></div>
+                    <span className="event-price">{event.ticketPrice}</span>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }
 

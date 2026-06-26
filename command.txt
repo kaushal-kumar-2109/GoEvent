@@ -17,5 +17,5 @@
     => npm create vite@latest GoEventWeb -- --template react  
     => cd GoEventWeb
     => npm install
-    => npm i react-router-dom
+    => npm i react-router-dom react-toastify
     => npm run dev

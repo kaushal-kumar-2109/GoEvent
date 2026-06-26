@@ -5,196 +5,52 @@ import Footer from '../../components/footer/footer';
 import Loader from '../../components/loader/loader';
 import './landing.css';
 import EventCard from '../../components/cards/eventCards';
+import { categoriesList } from '../../utils/mockData';
+import { getLandData } from '../../api/getApiHandler/getData';
+import { ToastMessage, ToastSuccess } from '../../assets/toast.jsx';
 
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [eventsList, setEventsList] = useState([]);
+
+  const LoadData = async () => {
+    setIsLoading(true);
+    const res = await getLandData();
+    if (res.flag) {
+      setEventsList(res.data.data);
+      ToastSuccess("Data loaded!");
+    } else {
+      console.error("Error " + res.error);
+      ToastMessage(res.message);
+    }
+    setIsLoading(false);
+  }
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    LoadData();
   }, []);
 
-  // Search input state
-  const [searchParams, setSearchParams] = useState({
-    location: '',
-    date: '',
-    category: 'all',
-    query: ''
-  });
-
-  const handleSearchChange = (e) => {
-    const { name, value } = e.target;
-    setSearchParams((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    console.log('Search Query triggered:', searchParams);
-    alert(`Searching for: \nQuery: ${searchParams.query || 'Any'} \nLocation: ${searchParams.location || 'Anywhere'} \nDate: ${searchParams.date || 'Anytime'} \nCategory: ${searchParams.category}`);
-  };
-
-  // Mock Categories
-  const categoriesList = [
-    {
-      id: 'music',
-      name: 'Music',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M9 18V5l12-2v13" />
-          <circle cx="6" cy="18" r="3" />
-          <circle cx="18" cy="16" r="3" />
-        </svg>
-      )
-    },
-    {
-      id: 'sports',
-      name: 'Sports',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M6 12A6 6 0 0 1 18 12" />
-          <path d="M12 6A6 6 0 0 1 12 18" />
-        </svg>
-      )
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
-          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-        </svg>
-      )
-    },
-    {
-      id: 'technology',
-      name: 'Technology',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="2" width="20" height="8" rx="2" />
-          <rect x="2" y="14" width="20" height="8" rx="2" />
-          <line x1="6" x2="6" y1="10" y2="14" />
-          <line x1="18" x2="18" y1="10" y2="14" />
-        </svg>
-      )
-    },
-    {
-      id: 'food',
-      name: 'Food & Drink',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v20" />
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      )
-    },
-    {
-      id: 'art',
-      name: 'Art & Culture',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 14.7255 3.09032 17.1962 4.85857 19C5.35857 19.5 5.85857 20 6.85857 20C7.85857 20 8.5 19.5 9 19C9.5 18.5 10 18.5 10.5 19C11 19.5 11.5 20 12 22Z" />
-          <circle cx="7.5" cy="10.5" r="1.5" />
-          <circle cx="11.5" cy="7.5" r="1.5" />
-          <circle cx="16.5" cy="9.5" r="1.5" />
-        </svg>
-      )
-    },
-    {
-      id: 'health',
-      name: 'Health & Wellness',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-        </svg>
-      )
-    },
-    {
-      id: 'community',
-      name: 'Community',
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      )
-    }
-  ];
-
-  // Mock Events
-  const eventsList = [
-    {
-      id: 1,
-      title: 'Summer Music Festival 2024',
-      image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80',
-      month: 'JUN',
-      day: '15',
-      location: 'Central Park, New York',
-      category: 'Music',
-      color: '#a855f7', // Purple
-      price: '$49.00'
-    },
-    {
-      id: 2,
-      title: 'Tech Summit 2024',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80',
-      month: 'JUN',
-      day: '22',
-      location: 'Convention Center, San Francisco',
-      category: 'Technology',
-      color: '#3b82f6', // Blue
-      price: '$199.00'
-    },
-    {
-      id: 3,
-      title: 'Championship Finals',
-      image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80',
-      month: 'JUN',
-      day: '28',
-      location: 'Madison Square Garden, New York',
-      category: 'Sports',
-      color: '#f59e0b', // Amber/Orange
-      price: '$89.00'
-    },
-    {
-      id: 4,
-      title: 'Food Festival 2024',
-      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80',
-      month: 'JUL',
-      day: '05',
-      location: 'Waterfront Park, Brooklyn',
-      category: 'Food & Drink',
-      color: '#10b981', // Green
-      price: '$35.00'
-    }
-  ];
 
   if (isLoading) {
     return <Loader text="Loading GoEvent" />;
   }
-
   return (
     <div className="landing-wrapper">
       {/* Navigation bar */}
-      <NavBar 
-        isLoggedIn={isLoggedIn} 
-        onLogout={() => setIsLoggedIn(false)} 
-        onToggleSidebar={() => setSidebarOpen(true)} 
+      <NavBar
+        isLoggedIn={isLoggedIn}
+        onLogout={() => setIsLoggedIn(false)}
+        onToggleSidebar={() => setSidebarOpen(true)}
       />
 
       {/* Side drawer navigation */}
-      <SideBar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        isLoggedIn={isLoggedIn} 
-        onLogout={() => setIsLoggedIn(false)} 
+      <SideBar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isLoggedIn={isLoggedIn}
+        onLogout={() => setIsLoggedIn(false)}
       />
 
       {/* Hero Banner Section */}
@@ -227,122 +83,11 @@ export default function LandingPage() {
         <div className="hero-overlay-bottom"></div>
       </header>
 
-      {/* Floating Filters Widget */}
-      <div className="search-widget-container">
-        <form className="search-widget" onSubmit={handleSearchSubmit}>
-          {/* Location field */}
-          <div className="search-field">
-            <div className="search-field-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-            </div>
-            <div className="search-field-details">
-              <label className="search-field-label" htmlFor="widget-location">Location</label>
-              <input
-                id="widget-location"
-                type="text"
-                name="location"
-                className="search-field-input"
-                placeholder="Search location"
-                value={searchParams.location}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-
-          {/* Date field */}
-          <div className="search-field">
-            <div className="search-field-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                <line x1="16" x2="16" y1="2" y2="6" />
-                <line x1="8" x2="8" y1="2" y2="6" />
-                <line x1="3" x2="21" y1="10" y2="10" />
-              </svg>
-            </div>
-            <div className="search-field-details">
-              <label className="search-field-label" htmlFor="widget-date">Date</label>
-              <input
-                id="widget-date"
-                type="text"
-                name="date"
-                className="search-field-input"
-                placeholder="Select date"
-                value={searchParams.date}
-                onChange={handleSearchChange}
-                onFocus={(e) => (e.target.type = 'date')}
-                onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
-              />
-            </div>
-          </div>
-
-          {/* Category dropdown field */}
-          <div className="search-field">
-            <div className="search-field-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-              </svg>
-            </div>
-            <div className="search-field-details" style={{ position: 'relative', width: '100%' }}>
-              <label className="search-field-label" htmlFor="widget-category">Category</label>
-              <select
-                id="widget-category"
-                name="category"
-                className="search-field-select"
-                value={searchParams.category}
-                onChange={handleSearchChange}
-              >
-                <option value="all">All categories</option>
-                <option value="music">Music</option>
-                <option value="sports">Sports</option>
-                <option value="business">Business</option>
-                <option value="technology">Technology</option>
-                <option value="food">Food & Drink</option>
-                <option value="art">Art & Culture</option>
-                <option value="health">Health & Wellness</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Keyword Search field */}
-          <div className="search-field">
-            <div className="search-field-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-            </div>
-            <div className="search-field-details">
-              <label className="search-field-label" htmlFor="widget-query">Search</label>
-              <input
-                id="widget-query"
-                type="text"
-                name="query"
-                className="search-field-input"
-                placeholder="Events, artists, venues..."
-                value={searchParams.query}
-                onChange={handleSearchChange}
-              />
-            </div>
-          </div>
-
-          {/* Search CTA button */}
-          <button type="submit" className="btn-widget-search">
-            Search
-          </button>
-        </form>
-      </div>
-
       {/* Category Section */}
       <section className="section-container">
         <div className="section-header">
           <h2 className="section-title">Browse by Category</h2>
-          <a href="#all-categories" className="section-link" onClick={(e) => { e.preventDefault(); alert('Show all categories catalog'); }}>
+          <a href="#" className="section-link">
             View All
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -352,7 +97,7 @@ export default function LandingPage() {
 
         <div className="categories-grid">
           {categoriesList.map((cat) => (
-            <div key={cat.id} className="category-card" onClick={() => alert(`Selected Category: ${cat.name}`)}>
+            <div key={cat.id} className="category-card">
               <div className="category-icon">
                 {cat.icon}
               </div>
@@ -366,7 +111,7 @@ export default function LandingPage() {
       <section className="section-container" id="events">
         <div className="section-header">
           <h2 className="section-title">Featured Events</h2>
-          <a href="#all-events" className="section-link" onClick={(e) => { e.preventDefault(); alert('Show all featured events'); }}>
+          <a href="#" className="section-link">
             View All Events
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
@@ -376,7 +121,7 @@ export default function LandingPage() {
 
         <div className="events-grid">
           {eventsList.map((event) => (
-            <EventCard key={event.id} data={event} />
+            <EventCard key={event._id} event={event} />
           ))}
         </div>
       </section>

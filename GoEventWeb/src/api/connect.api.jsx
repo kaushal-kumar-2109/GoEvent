@@ -8,7 +8,8 @@ const ROUTERS = {
         setUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/set-user`
     },
     GET_ROUTE: {
-        getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`
+        getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`,
+        getEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-event`
     }
 };
 

@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Signup from "../pages/setupPage/signup";
 import Login from "../pages/setupPage/login";
 import LandingPage from "../pages/landingPage/landing";
+import EventDetailPage from "../pages/applicationPage/eventDetailPage/eventDetailPage";
 
 // @import pages components
 const NotFound = () => <h2>404 - Page Not Found</h2>;
@@ -15,6 +16,7 @@ const MainRouter = () => {
             <Route path="/GoEvent" element={<LandingPage />} />
             <Route path="/GoEvent/signup" element={<Signup />} />
             <Route path="/GoEvent/login" element={<Login />} />
+            <Route path="/GoEvent/event/:id" element={<EventDetailPage />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     )

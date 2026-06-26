@@ -1,0 +1,37 @@
+POST http://localhost:3000/CampusCore/admin-signup HTTP/1.1
+content-Type: application/json
+
+{
+    "collegeName": "try college",
+    "collegeCode": "32423",
+    "collegeType": "College",
+    "collegeEmail": "tryEmail@gmail.com",
+    "collegeContactNumber": "3843243242",
+    "adminName": "try admin",
+    "adminEmail": "tryadmin@gmail.com",
+    "adminContactNumber": "3248487638",
+    "password": "trytry"
+}
+###
+
+
+### Create a New User
+POST http://localhost:3000/GoEvent/post/create-user HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "John Doe",
+    "email": "kaushal21092003kumar@gmail.com",
+    "password": "okokokok",
+    "organisation": "Test Organisation",
+    "phone": "1234567890",
+    "otp": "123456"
+}
+
+### Send otp to email
+POST http://localhost:3000/GoEvent/post/send-otp HTTP/1.1
+Content-Type: application/json
+{
+    "email": "kaushal21092003kumar@gmail.com",
+    "tag": "signup"
+}
