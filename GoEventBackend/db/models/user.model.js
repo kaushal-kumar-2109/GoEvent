@@ -33,7 +33,7 @@ const USER = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["ACTIVE", "INACTIVE", "DELETED"],
+        enum: ["ACTIVE", "INACTIVE", "DELETED", "LOCKED"],
         default: "ACTIVE"
     },
     createdAt: {
@@ -43,6 +43,14 @@ const USER = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    attempts: {
+        type: Number,
+        default: 3
+    },
+    lockedUntil: {
+        type: Date,
+        default: null
     }
 });
 

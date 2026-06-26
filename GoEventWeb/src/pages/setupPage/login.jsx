@@ -97,7 +97,6 @@ export default function Login() {
       ToastError(emailError);
       return;
     }
-
     setIsSendingOtp(true);
     const response = await sendOtp({ email: formData.email, tag: "login" });
     if (response.flag) {
@@ -122,18 +121,20 @@ export default function Login() {
 
     if (!emailErr && !passErr && !otpErr) {
       setIsSubmitting(true);
+
       const response = await setUser({
         email: formData.email,
         password: formData.password,
         otp: formData.otp
       });
+
       if (response.flag) {
         ToastSuccess(response.data.message);
         localStorage.setItem("GoEventUserData",
           JSON.stringify({
             token: response.data.token,
             name: response.data.name,
-            email: response.data.email,
+            email: formData.email,
             validTill: Date.now() + 7 * 24 * 60 * 60 * 1000
           })
         );

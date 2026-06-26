@@ -55,7 +55,7 @@ const CreateUser = async (req, res) => {
 
             res.cookie("jwt", tokenData.token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production", // Secure in production
+                secure: process.env.NODE_ENV,
                 sameSite: "strict",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
@@ -81,6 +81,17 @@ const SetUser = async (req, res) => {
         if (password.length < 8) return res.status(400).json({ tag: "password", success: false, message: "Password must be at least 8 characters long!" });
 
         const user = await User.findOne({ email });
+        // Check if user is locked
+        if (user && user.lockedUntil != null) {
+            const timeRemains = user.lockedUntil - new Date();
+            const timeInMinutes = timeRemains / 1000 / 60;
+            if (timeInMinutes > 0) {
+                return res.status(403).json({ success: false, message: `Account is locked! try again after ${timeInMinutes} minutes.` });
+            }
+            await User.updateOne({ email }, { lockedUntil: null, attempts: 3, status: "ACTIVE" });
+        }
+        if (user && user.status == "LOCKED") return res.status(403).json({ success: false, message: "Account is locked! try again after some time." });
+
         if (!user) return res.status(400).json({ tag: "email", success: false, message: "User not found with this email!" });
 
         const otpData = await Otp.findOne({ email });
@@ -93,10 +104,16 @@ const SetUser = async (req, res) => {
         }
         if (otpData.exp < Date.now()) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired!" });
 
-        // FIX: Updating user password with a secure new hash instead of comparing old password
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
-        await user.save();
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            user.attempts -= 1;
+            await user.save();
+            if (user.attempts === 0) {
+                await User.updateOne({ email }, { lockedUntil: Date.now() + 24 * 60 * 60 * 1000, status: "LOCKED" });
+                return res.status(403).json({ success: false, message: "Your account is locked for 24 hours!" });
+            }
+            return res.status(400).json({ success: false, message: `Invalid Password! ${user.attempts} attempts left.` });
+        }
 
         await Otp.deleteOne({ email });
 
@@ -111,13 +128,13 @@ const SetUser = async (req, res) => {
 
             res.cookie("jwt", tokenData.token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
+                secure: process.env.NODE_ENV,
                 sameSite: "strict",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             return res.status(200).json({
                 success: true,
-                message: "Password updated successfully!",
+                message: "User logedin successfully!",
                 token: tokenData.token,
                 name: user.name,
                 email: user.email
@@ -139,6 +156,18 @@ const SendEmailOTP = async (req, res) => {
         if (!isValidEmail(email)) return res.status(400).json({ tag: "email", success: false, message: "Invalid email!" });
 
         const userData = await User.findOne({ email });
+
+        // Check if user is locked
+        if (userData && userData.lockedUntil != null) {
+            const timeRemains = userData.lockedUntil - new Date();
+            const timeInMinutes = timeRemains / 1000 / 60;
+            if (timeInMinutes > 0) {
+                return res.status(403).json({ success: false, message: `Account is locked! try again after ${timeInMinutes} minutes.` });
+            }
+            await User.updateOne({ email }, { lockedUntil: null, attempts: 3, status: "ACTIVE" });
+        }
+        if (userData && userData.status == "LOCKED") return res.status(403).json({ success: false, message: "Account is locked! try again after some time." });
+
         if (tag === "signup" && userData) {
             return res.status(400).json({ tag: "email", success: false, message: "User already exists with this email!" });
         } else if (tag === "login" && !userData) {
