@@ -32,7 +32,12 @@ const CreateUser = async (req, res) => {
 
         const otpData = await Otp.findOne({ email });
         if (!otpData) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired or not found!" });
-        if (parseInt(otpData.otp) !== parseInt(otp)) return res.status(400).json({ tag: "otp", success: false, message: "Invalid OTP!" });
+        if (parseInt(otpData.otp) !== parseInt(otp)) {
+            otpData.attempts -= 1;
+            await otpData.save();
+            if (otpData.attempts === 0) await Otp.deleteOne({ email });
+            return res.status(400).json({ tag: "otp", success: false, message: `Invalid OTP! ${otpData.attempts} attempts left.` });
+        }
         if (otpData.exp < Date.now()) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired!" });
 
         const salt = await bcrypt.genSalt(10);
@@ -80,7 +85,12 @@ const SetUser = async (req, res) => {
 
         const otpData = await Otp.findOne({ email });
         if (!otpData) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired or not found!" });
-        if (parseInt(otpData.otp) !== parseInt(otp)) return res.status(400).json({ tag: "otp", success: false, message: "Invalid OTP!" });
+        if (parseInt(otpData.otp) !== parseInt(otp)) {
+            otpData.attempts -= 1;
+            await otpData.save();
+            if (otpData.attempts === 0) await Otp.deleteOne({ email });
+            return res.status(400).json({ tag: "otp", success: false, message: `Invalid OTP! ${otpData.attempts} attempts left.` });
+        }
         if (otpData.exp < Date.now()) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired!" });
 
         // FIX: Updating user password with a secure new hash instead of comparing old password
@@ -106,12 +116,12 @@ const SetUser = async (req, res) => {
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             return res.status(200).json({
-                 success: true,
-                 message: "Password updated successfully!",
-                 token: tokenData.token,
-                 name: user.name,
-                 email: user.email
-             });
+                success: true,
+                message: "Password updated successfully!",
+                token: tokenData.token,
+                name: user.name,
+                email: user.email
+            });
         } else {
             return res.status(500).json({ tag: "token", success: false, message: tokenData.message });
         }

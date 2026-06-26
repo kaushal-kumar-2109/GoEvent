@@ -110,8 +110,8 @@ export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar }) {
                 {dropdownOpen && (
                   <div className="navbar-profile-dropdown">
                     <div className="dropdown-user-info">
-                      <div className="dropdown-user-name">Kishore Kumar</div>
-                      <div className="dropdown-user-email">kishore@goevent.com</div>
+                      <div className="dropdown-user-name">{JSON.parse(localStorage.getItem("GoEventUserData")).name}</div>
+                      <div className="dropdown-user-email">{JSON.parse(localStorage.getItem("GoEventUserData")).email}</div>
                     </div>
                     <button className="dropdown-item" onClick={() => { setDropdownOpen(false); alert('My Profile details.'); }}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

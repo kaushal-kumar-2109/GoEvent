@@ -84,8 +84,8 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout }) {
                   </svg>
                 </div>
                 <div className="sidebar-profile-details">
-                  <span className="sidebar-profile-name">Kishore Kumar</span>
-                  <span className="sidebar-profile-email">kishore@goevent.com</span>
+                  <span className="sidebar-profile-name">{JSON.parse(localStorage.getItem("GoEventUserData"))?.name || "User"}</span>
+                  <span className="sidebar-profile-email">{JSON.parse(localStorage.getItem("GoEventUserData"))?.email || "Email"}</span>
                 </div>
               </div>
               <button
