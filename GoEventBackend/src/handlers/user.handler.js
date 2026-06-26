@@ -72,37 +72,8 @@ const CreateUser = async (req, res) => {
 // -------------------------- for set user (Reset Password / Update Profile) -------------------------- //
 const SetUser = async (req, res) => {
     try {
-        const { email, otp, password } = req.body;
-
-        if (!email) return res.status(400).json({ tag: "email", success: false, message: "Email is required!" });
-        if (!otp) return res.status(400).json({ tag: "otp", success: false, message: "OTP is required!" });
-        if (!password) return res.status(400).json({ tag: "password", success: false, message: "Password is required!" });
-        if (!isValidEmail(email)) return res.status(400).json({ tag: "email", success: false, message: "Invalid email!" });
-        if (password.length < 8) return res.status(400).json({ tag: "password", success: false, message: "Password must be at least 8 characters long!" });
-
-        const user = await User.findOne({ email });
-        // Check if user is locked
-        if (user && user.lockedUntil != null) {
-            const timeRemains = user.lockedUntil - new Date();
-            const timeInMinutes = timeRemains / 1000 / 60;
-            if (timeInMinutes > 0) {
-                return res.status(403).json({ success: false, message: `Account is locked! try again after ${timeInMinutes} minutes.` });
-            }
-            await User.updateOne({ email }, { lockedUntil: null, attempts: 3, status: "ACTIVE" });
-        }
-        if (user && user.status == "LOCKED") return res.status(403).json({ success: false, message: "Account is locked! try again after some time." });
-
-        if (!user) return res.status(400).json({ tag: "email", success: false, message: "User not found with this email!" });
-
-        const otpData = await Otp.findOne({ email });
-        if (!otpData) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired or not found!" });
-        if (parseInt(otpData.otp) !== parseInt(otp)) {
-            otpData.attempts -= 1;
-            await otpData.save();
-            if (otpData.attempts === 0) await Otp.deleteOne({ email });
-            return res.status(400).json({ tag: "otp", success: false, message: `Invalid OTP! ${otpData.attempts} attempts left.` });
-        }
-        if (otpData.exp < Date.now()) return res.status(400).json({ tag: "otp", success: false, message: "OTP Expired!" });
+        const { email, password } = req.body;
+        const user = req.user;
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -115,15 +86,13 @@ const SetUser = async (req, res) => {
             return res.status(400).json({ success: false, message: `Invalid Password! ${user.attempts} attempts left.` });
         }
 
-        await Otp.deleteOne({ email });
-
         const tokenData = await CreateUserToken(user._id, user.name, user.email);
         if (tokenData.status) {
             // Upsert operation safely handles updating or creating tokens smoothly
             await Token.findOneAndUpdate(
                 { userId: user._id },
                 { token: tokenData.token },
-                { upsert: true, new: true }
+                { upsert: true, returnDocument: "after" }
             );
 
             res.cookie("jwt", tokenData.token, {
@@ -142,6 +111,26 @@ const SetUser = async (req, res) => {
         } else {
             return res.status(500).json({ tag: "token", success: false, message: tokenData.message });
         }
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Internal server error!" });
+    }
+}
+
+// -------------------------- for update password of the user  -------------------------- //
+const UpdatePassword = async (req, res) => {
+    try {
+        const { email, password, otp } = req.body;
+        const user = req.user;
+
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+
+        await User.findOneAndUpdate({ email }, { password: hash, updatedAt: Date.now() });
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully!"
+        });
+
     } catch (err) {
         return res.status(500).json({ success: false, message: "Internal server error!" });
     }
@@ -183,7 +172,7 @@ const SendEmailOTP = async (req, res) => {
         await Otp.findOneAndUpdate(
             { email },
             { otp, exp: expirationTime },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: "after" }
         );
 
         const otpRes = await SendEmail(email, otp, tag);
@@ -195,4 +184,4 @@ const SendEmailOTP = async (req, res) => {
     }
 }
 
-module.exports = { CreateUser, SetUser, SendEmailOTP };
+module.exports = { CreateUser, SetUser, SendEmailOTP, UpdatePassword };

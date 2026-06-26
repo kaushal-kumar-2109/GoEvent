@@ -6,6 +6,7 @@ const Router = express.Router();
 
 // ------------------------- user handeler ------------------------- //
 const { CreateUser, SetUser, SendEmailOTP } = require("../handlers/user.handler.js");
+const { CheckUserValidation } = require("../middlewares/checkValidation.js");
 
 // ------------------------- creating routes ------------------------- //
 Router.route("/post").post((req, res) => {
@@ -13,7 +14,7 @@ Router.route("/post").post((req, res) => {
 });
 
 Router.route("/post/create-user").post(CreateUser);
-Router.route("/post/set-user").post(SetUser);
+Router.route("/post/set-user").post(CheckUserValidation, SetUser);
 Router.route("/post/send-otp").post(SendEmailOTP);
 
 module.exports = Router;

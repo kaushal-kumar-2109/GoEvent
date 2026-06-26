@@ -10,6 +10,9 @@ const ROUTERS = {
     GET_ROUTE: {
         getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`,
         getEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-event`
+    },
+    PUT_ROUTE: {
+        updatePassword: `${WEB_PATH}${MAIN_SUB_WEB_URL}/put/change-password`
     }
 };
 
