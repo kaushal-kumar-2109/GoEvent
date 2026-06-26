@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import "./eventCard.css";
 
 const EventCard = ({ event }) => {
-    console.log(event);
-
     const isoString = event.startDate;
     const dateObj = new Date(isoString);
     // Extract separate strings

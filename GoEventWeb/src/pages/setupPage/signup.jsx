@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Loader from '../../components/loader/loader';
+import { useNavigate } from 'react-router-dom';
+import { ToastSuccess, ToastError } from '../../assets/toast';
 import './setup.css';
+import { createUser, sendOtp } from '../../api/postApiHandler/pstData';
 
 export default function Signup() {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    number: '',
+    otp: '',
+    phone: '',
     password: '',
     organisation: ''
   });
@@ -15,7 +19,8 @@ export default function Signup() {
   const [errors, setErrors] = useState({
     name: '',
     email: '',
-    number: '',
+    phone: '',
+    otp: '',
     password: '',
     organisation: ''
   });
@@ -23,18 +28,22 @@ export default function Signup() {
   const [touched, setTouched] = useState({
     name: false,
     email: false,
-    number: false,
+    otp: false,
+    phone: false,
     password: false,
     organisation: false
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 600);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -50,14 +59,19 @@ export default function Signup() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) return 'Please enter a valid email address';
         return '';
-      case 'number':
-        if (!value) return 'Phone number is required';
+      case 'otp':
+        if (!value) return 'OTP is required';
+        const otpRegex = /^[0-9]{6}$/;
+        if (!otpRegex.test(value)) return 'Please enter a valid 6-digit OTP';
+        return '';
+      case 'phone':
+        if (!value) return 'Phone phone is required';
         const phoneRegex = /^[0-9]{10}$/;
-        if (!phoneRegex.test(value.replace(/[\s-()]/g, ''))) return 'Please enter a valid 10-digit phone number';
+        if (!phoneRegex.test(value.replace(/[\s-()]/g, ''))) return 'Please enter a valid 10-digit phone phone';
         return '';
       case 'password':
         if (!value) return 'Password is required';
-        if (value.length < 6) return 'Password must be at least 6 characters';
+        if (value.length < 8) return 'Password must be at least 8 characters';
         return '';
       case 'organisation':
         if (!value.trim()) return 'Organisation name is required';
@@ -86,23 +100,50 @@ export default function Signup() {
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Send OTP handler
+  const handleSendOtp = async () => {
+    const emailError = validateField('email', formData.email);
+    if (emailError) {
+      setTouched((prev) => ({ ...prev, email: true }));
+      setErrors((prev) => ({ ...prev, email: emailError }));
+      ToastError(emailError);
+      return;
+    }
+    setIsSendingOtp(true);
+    const response = await sendOtp({ email: formData.email, tag: "signup" });
+    if (response.flag) {
+      setIsOtpSent(true);
+      ToastSuccess(response.data.message);
+    } else {
+      ToastError(response.data.message);
+    }
+
+    setIsSendingOtp(false);
+  };
+
   // Submit handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {};
     let hasError = false;
 
     Object.keys(formData).forEach((key) => {
+      if (key === 'otp' && !isOtpSent) {
+        newErrors["email"] = 'Please verify your email first';
+        hasError = true;
+        ToastError("verify your email!");
+        return;
+      }
       const error = validateField(key, formData[key]);
       newErrors[key] = error;
       if (error) hasError = true;
     });
-
     setTouched({
       name: true,
       email: true,
-      number: true,
+      otp: true,
+      phone: true,
       password: true,
       organisation: true
     });
@@ -110,17 +151,37 @@ export default function Signup() {
 
     if (!hasError) {
       setIsSubmitting(true);
-      console.log('Signup Form Submitted successfully:', formData);
-      // Simulating API integration loading state.
-      setTimeout(() => {
-        setIsSubmitting(false);
-        alert('Signup Validation Successful! Integration is ready for API Call.');
-      }, 1500);
+      const response = await createUser({
+        name: formData.name,
+        email: formData.email,
+        otp: formData.otp,
+        phone: formData.phone,
+        password: formData.password,
+        organisation: formData.organisation
+      });
+      if (response.flag) {
+        ToastSuccess(response.data.message);
+        localStorage.setItem("GoEventUserData",
+          JSON.stringify({
+            token: response.data.token,
+            name: formData.name,
+            email: formData.email,
+            validTill: Date.now() + 7 * 24 * 60 * 60 * 1000
+          })
+        );
+        navigate("/GoEvent");
+        return;
+      } else {
+        newErrors[response.data.tag] = response.data.message;
+        hasError = true;
+        ToastError(response.data.message);
+      }
+      setIsSubmitting(false);
     }
   };
 
-  const isFormValid = !Object.values(errors).some((err) => err) && 
-                      Object.values(touched).some((t) => t);
+  const isFormValid = !Object.values(errors).some((err) => err) &&
+    Object.values(touched).some((t) => t);
 
   if (isLoading) {
     return <Loader text="Loading Signup" />;
@@ -179,14 +240,22 @@ export default function Signup() {
                 id="signup-email"
                 type="email"
                 name="email"
-                className={`setup-input ${touched.email && errors.email ? 'input-error' : ''}`}
+                className={`setup-input setup-input-email ${touched.email && errors.email ? 'input-error' : ''}`}
                 placeholder="john@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isOtpSent}
                 required
               />
+              <button
+                type="button"
+                className="setup-input-button"
+                onClick={handleSendOtp}
+                disabled={isSendingOtp || isOtpSent}
+              >
+                {isSendingOtp ? 'Sending...' : isOtpSent ? 'Sent' : 'Verify'}
+              </button>
               <span className="setup-input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="16" x="2" y="4" rx="2" />
@@ -206,17 +275,54 @@ export default function Signup() {
             )}
           </div>
 
-          {/* Phone Number */}
+          {/* otp verification */}
+          {isOtpSent && (
+            <div className="setup-form-group">
+              <label className="setup-label" htmlFor="signup-otp">OTP Verification</label>
+              <div className="setup-input-wrapper">
+                <input
+                  id="signup-otp"
+                  type="text"
+                  name="otp"
+                  className={`setup-input ${touched.otp && errors.otp ? 'input-error' : ''}`}
+                  placeholder="123456"
+                  value={formData.otp}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  disabled={isSubmitting}
+                  required
+                />
+                <span className="setup-input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </span>
+              </div>
+              {touched.otp && errors.otp && (
+                <span className="setup-error-text" id="otp-error">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" x2="12" y1="8" y2="12" />
+                    <line x1="12" x2="12.01" y1="16" y2="16" />
+                  </svg>
+                  {errors.otp}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Phone phone */}
           <div className="setup-form-group">
-            <label className="setup-label" htmlFor="signup-number">Phone Number</label>
+            <label className="setup-label" htmlFor="signup-phone">Phone phone</label>
             <div className="setup-input-wrapper">
               <input
-                id="signup-number"
+                id="signup-phone"
                 type="tel"
-                name="number"
-                className={`setup-input ${touched.number && errors.number ? 'input-error' : ''}`}
-                placeholder="10-digit number"
-                value={formData.number}
+                name="phone"
+                className={`setup-input ${touched.phone && errors.phone ? 'input-error' : ''}`}
+                placeholder="10-digit phone"
+                value={formData.phone}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 disabled={isSubmitting}
@@ -228,14 +334,14 @@ export default function Signup() {
                 </svg>
               </span>
             </div>
-            {touched.number && errors.number && (
-              <span className="setup-error-text" id="number-error">
+            {touched.phone && errors.phone && (
+              <span className="setup-error-text" id="phone-error">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" x2="12" y1="8" y2="12" />
                   <line x1="12" x2="12.01" y1="16" y2="16" />
                 </svg>
-                {errors.number}
+                {errors.phone}
               </span>
             )}
           </div>
@@ -284,7 +390,7 @@ export default function Signup() {
                 type={showPassword ? 'text' : 'password'}
                 name="password"
                 className={`setup-input setup-input-password ${touched.password && errors.password ? 'input-error' : ''}`}
-                placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -352,12 +458,12 @@ export default function Signup() {
 
         <div className="setup-footer">
           Already have an account?{' '}
-          <a href="/login" className="setup-link" onClick={(e) => { e.preventDefault(); alert('Redirecting to Log In...'); }}>
+          <a href="/GoEvent/login" className="setup-link">
             Sign In
           </a>
         </div>
       </div>
-      
+
       {/* Inline styles for spinner rotation */}
       <style>{`
         @keyframes spin {

@@ -1,31 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Loader from '../../components/loader/loader';
+import { useNavigate } from 'react-router-dom';
+import { ToastSuccess, ToastError } from '../../assets/toast';
+import { sendOtp, setUser } from '../../api/postApiHandler/pstData';
 import './setup.css';
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    otp: ''
   });
 
   const [errors, setErrors] = useState({
     email: '',
-    password: ''
+    password: '',
+    otp: ''
   });
 
   const [touched, setTouched] = useState({
     email: false,
-    password: false
+    password: false,
+    otp: false
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 600);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,7 +49,15 @@ export default function Login() {
   // Password validation helper
   const validatePassword = (password) => {
     if (!password) return 'Password is required';
-    if (password.length < 6) return 'Password must be at least 6 characters';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    return '';
+  };
+
+  // OTP validation helper
+  const validateOtp = (otp) => {
+    if (!otp) return 'OTP is required';
+    const otpRegex = /^[0-9]{6}$/;
+    if (!otpRegex.test(otp)) return 'Please enter a valid 6-digit OTP';
     return '';
   };
 
@@ -53,6 +70,7 @@ export default function Login() {
       let error = '';
       if (name === 'email') error = validateEmail(value);
       if (name === 'password') error = validatePassword(value);
+      if (name === 'otp') error = validateOtp(value);
       setErrors((prev) => ({ ...prev, [name]: error }));
     }
   };
@@ -65,28 +83,66 @@ export default function Login() {
     let error = '';
     if (name === 'email') error = validateEmail(value);
     if (name === 'password') error = validatePassword(value);
+    if (name === 'otp') error = validateOtp(value);
 
     setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
+  // Send OTP handler
+  const handleSendOtp = async () => {
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setTouched((prev) => ({ ...prev, email: true }));
+      setErrors((prev) => ({ ...prev, email: emailError }));
+      ToastError(emailError);
+      return;
+    }
+
+    setIsSendingOtp(true);
+    const response = await sendOtp({ email: formData.email, tag: "login" });
+    if (response.flag) {
+      setIsOtpSent(true);
+      ToastSuccess(response.data.message);
+    } else {
+      ToastError(response.data.message);
+    }
+    setIsSendingOtp(false);
+  };
+
   // Form submit handler
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const emailErr = validateEmail(formData.email);
     const passErr = validatePassword(formData.password);
+    const otpErr = isOtpSent ? validateOtp(formData.otp) : 'Please verify your email first';
 
-    setTouched({ email: true, password: true });
-    setErrors({ email: emailErr, password: passErr });
+    setTouched({ email: true, password: true, otp: true });
+    setErrors({ email: emailErr, password: passErr, otp: otpErr });
 
-    if (!emailErr && !passErr) {
+    if (!emailErr && !passErr && !otpErr) {
       setIsSubmitting(true);
-      console.log('Login Form Submitted successfully:', formData);
-      // Simulating API loading state. User can attach their own fetch/axios logic here
-      setTimeout(() => {
-        setIsSubmitting(false);
-        alert('Validation Successful! Integration is ready for API Call.');
-      }, 1500);
+      const response = await setUser({
+        email: formData.email,
+        password: formData.password,
+        otp: formData.otp
+      });
+      if (response.flag) {
+        ToastSuccess(response.data.message);
+        localStorage.setItem("GoEventUserData",
+          JSON.stringify({
+            token: response.data.token,
+            name: response.data.name,
+            email: response.data.email,
+            validTill: Date.now() + 7 * 24 * 60 * 60 * 1000
+          })
+        );
+        navigate("/GoEvent");
+        return;
+      } else {
+        ToastError(response.data.message);
+      }
+      setIsSubmitting(false);
     }
   };
 
@@ -112,14 +168,22 @@ export default function Login() {
                 id="login-email"
                 type="email"
                 name="email"
-                className={`setup-input ${touched.email && errors.email ? 'input-error' : ''}`}
+                className={`setup-input setup-input-email ${touched.email && errors.email ? 'input-error' : ''}`}
                 placeholder="name@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isOtpSent}
                 required
               />
+              <button
+                type="button"
+                className="setup-input-button"
+                onClick={handleSendOtp}
+                disabled={isSendingOtp || isOtpSent}
+              >
+                {isSendingOtp ? 'Sending...' : isOtpSent ? 'Sent' : 'Verify'}
+              </button>
               <span className="setup-input-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect width="20" height="16" x="2" y="4" rx="2" />
@@ -139,12 +203,49 @@ export default function Login() {
             )}
           </div>
 
+          {/* OTP Verification Field */}
+          {isOtpSent && (
+            <div className="setup-form-group">
+              <label className="setup-label" htmlFor="login-otp">OTP Verification</label>
+              <div className="setup-input-wrapper">
+                <input
+                  id="login-otp"
+                  type="text"
+                  name="otp"
+                  className={`setup-input ${touched.otp && errors.otp ? 'input-error' : ''}`}
+                  placeholder="123456"
+                  value={formData.otp}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  disabled={isSubmitting}
+                  required
+                />
+                <span className="setup-input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </span>
+              </div>
+              {touched.otp && errors.otp && (
+                <span className="setup-error-text" id="otp-error">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" x2="12" y1="8" y2="12" />
+                    <line x1="12" x2="12.01" y1="16" y2="16" />
+                  </svg>
+                  {errors.otp}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Password Field */}
           <div className="setup-form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <label className="setup-label" htmlFor="login-password">Password</label>
               <div className="setup-form-options">
-                <a href="/forgot" className="setup-link" onClick={(e) => { e.preventDefault(); alert('Redirecting to Forgot Password...'); }}>
+                <a href="/GoEvent/forgot" className="setup-link">
                   Forgot password?
                 </a>
               </div>
@@ -223,7 +324,7 @@ export default function Login() {
 
         <div className="setup-footer">
           Don't have an account?{' '}
-          <a href="/signup" className="setup-link" onClick={(e) => { e.preventDefault(); alert('Redirecting to Sign Up...'); }}>
+          <a href="/GoEvent/signup" className="setup-link" >
             Sign up now
           </a>
         </div>

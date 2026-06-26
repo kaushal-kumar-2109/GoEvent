@@ -8,6 +8,7 @@ import EventCard from '../../components/cards/eventCards';
 import { categoriesList } from '../../utils/mockData';
 import { getLandData } from '../../api/getApiHandler/getData';
 import { ToastMessage, ToastSuccess } from '../../assets/toast.jsx';
+import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
 
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -29,8 +30,15 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
+    setIsLoggedIn(CheckUserAuth());
     LoadData();
   }, []);
+
+  const handleLogout = () => {
+    RemoveUserAuth();
+    setIsLoggedIn(false);
+    ToastSuccess("Logout successfully");
+  };
 
 
   if (isLoading) {
@@ -41,7 +49,7 @@ export default function LandingPage() {
       {/* Navigation bar */}
       <NavBar
         isLoggedIn={isLoggedIn}
-        onLogout={() => setIsLoggedIn(false)}
+        onLogout={handleLogout}
         onToggleSidebar={() => setSidebarOpen(true)}
       />
 
@@ -50,7 +58,7 @@ export default function LandingPage() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isLoggedIn={isLoggedIn}
-        onLogout={() => setIsLoggedIn(false)}
+        onLogout={handleLogout}
       />
 
       {/* Hero Banner Section */}

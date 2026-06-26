@@ -6,7 +6,9 @@ import Footer from '../../../components/footer/footer';
 import Loader from '../../../components/loader/loader';
 import { getEventById } from '../../../api/getApiHandler/getData';
 import { ToastMessage, ToastSuccess } from '../../../assets/toast.jsx';
+import { useNavigate } from 'react-router-dom';
 import './eventDetailPage.css';
+import { CheckUserAuth } from '../../../middleware/chekUserAuth.jsx';
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -21,49 +23,47 @@ export default function EventDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
+  const navigate = useNavigate();
+
+  const CheckAuth = async () => {
+    const isUserValid = await CheckUserAuth();
+    if (!isUserValid) {
+      navigate("/GoEvent/login");
+    }
+  }
+
+  const loadEvent = async () => {
+    setIsLoading(true);
+    try {
+      const res = await getEventById(id);
+      if (res && res.flag && res.data && res.data.data) {
+        const data = res.data.data;
+        setEventData(data);
+        setLikesCount(data.likes || 0);
+        setCommentsList(data.comments || []);
+      } else {
+        console.warn("API fetched failed or returned no data, falling back to mock details.");
+        setEventData(MOCK_EVENT);
+        setLikesCount(MOCK_EVENT.likes);
+        setCommentsList(MOCK_EVENT.comments);
+        ToastMessage("Using demo event info");
+      }
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error loading event: ", err);
+      if (active) {
+        setEventData(MOCK_EVENT);
+        setLikesCount(MOCK_EVENT.likes);
+        setCommentsList(MOCK_EVENT.comments);
+        setIsLoading(false);
+      }
+    }
+  };
 
   useEffect(() => {
-    let active = true;
-
-    const loadEvent = async () => {
-      // Defer loading to avoid synchronous setState inside the effect body
-      await Promise.resolve();
-      if (!active) return;
-
-      setIsLoading(true);
-      try {
-
-        const res = await getEventById(id);
-        if (res && res.flag && res.data && res.data.data) {
-          const data = res.data.data;
-          setEventData(data);
-          setLikesCount(data.likes || 0);
-          setCommentsList(data.comments || []);
-        } else {
-          console.warn("API fetched failed or returned no data, falling back to mock details.");
-          setEventData(MOCK_EVENT);
-          setLikesCount(MOCK_EVENT.likes);
-          setCommentsList(MOCK_EVENT.comments);
-          ToastMessage("Using demo event info");
-        }
-        setIsLoading(false);
-      } catch (err) {
-        console.error("Error loading event: ", err);
-        if (active) {
-          setEventData(MOCK_EVENT);
-          setLikesCount(MOCK_EVENT.likes);
-          setCommentsList(MOCK_EVENT.comments);
-          setIsLoading(false);
-        }
-      }
-    };
-
+    CheckAuth();
     loadEvent();
-
-    return () => {
-      active = false;
-    };
-  }, [id]);
+  }, []);
 
   const handleLikeToggle = () => {
     if (isLiked) {
