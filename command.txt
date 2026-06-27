@@ -1,4 +1,4 @@
-# backend command used 
+# backend command used (GoEventBackend)
     => npm inti
     => npm i bcrypt cors crypto dotenv express mongoose @faker-js/faker jsonwebtoken uuid nodemailer
     => npm i --save-dev nodemon
@@ -13,9 +13,15 @@
     => git push -u origin main
 
 
-# frontend command used 
+# frontend command used (GoEventWeb)
     => npm create vite@latest GoEventWeb -- --template react  
     => cd GoEventWeb
     => npm install
     => npm i react-router-dom react-toastify
     => npm run dev
+
+
+# frontend Mobile App command used (GoEventApp)
+    => npx create-expo-app@latest GoEventApp --template blank 
+    => cd GoEventApp
+    => npm install
