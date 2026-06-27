@@ -7,7 +7,7 @@ import './landing.css';
 import EventCard from '../../components/cards/eventCards';
 import { categoriesList } from '../../utils/mockData';
 import { getLandData } from '../../api/getApiHandler/getData';
-import { ToastMessage, ToastSuccess } from '../../assets/toast.jsx';
+import { ToastError, ToastSuccess } from '../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
 
 export default function LandingPage() {
@@ -24,7 +24,7 @@ export default function LandingPage() {
       ToastSuccess("Data loaded!");
     } else {
       console.error("Error " + res.error);
-      ToastMessage(res.message);
+      ToastError(res.message);
     }
     setIsLoading(false);
   }
@@ -51,6 +51,7 @@ export default function LandingPage() {
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
         onToggleSidebar={() => setSidebarOpen(true)}
+        tag={"home"}
       />
 
       {/* Side drawer navigation */}
@@ -59,6 +60,7 @@ export default function LandingPage() {
         onClose={() => setSidebarOpen(false)}
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
+        tag={"home"}
       />
 
       {/* Hero Banner Section */}

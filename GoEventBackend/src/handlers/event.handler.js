@@ -29,4 +29,62 @@ const GetEventById = async (req, res) => {
     }
 }
 
-module.exports = { GetLandingEvents, GetEventById };
+const GetAllEvents = async (req, res) => {
+    try {
+        const { page = 1, limit = 20, category, date, search } = req.query;
+        const query = {};
+
+        // Filter by Category
+        if (category && category !== "all") {
+            query.category = { $regex: new RegExp(`^${category}$`, "i") };
+        }
+
+        // Filter by Search (Name/Title)
+        if (search) {
+            query.title = { $regex: search, $options: "i" };
+        }
+
+        // Filter by Date
+        if (date) {
+            const targetDate = new Date(date);
+            if (!isNaN(targetDate.getTime())) {
+                const startOfDay = new Date(targetDate);
+                startOfDay.setHours(0, 0, 0, 0);
+
+                const endOfDay = new Date(targetDate);
+                endOfDay.setHours(23, 59, 59, 999);
+
+                query.startDate = {
+                    $gte: startOfDay,
+                    $lte: endOfDay
+                };
+            }
+        }
+
+        const pageNum = parseInt(page) || 1;
+        const limitNum = parseInt(limit) || 20;
+        const skipNum = (pageNum - 1) * limitNum;
+
+        const totalCount = await Event.countDocuments(query);
+        const events = await Event.find(query)
+            .sort({ startDate: 1 })
+            .skip(skipNum)
+            .limit(limitNum);
+
+        return res.status(200).json({
+            data: events,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limitNum),
+            currentPage: pageNum,
+            message: "Events fetched successfully"
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!",
+            error: err.message || err
+        });
+    }
+};
+
+module.exports = { GetLandingEvents, GetEventById, GetAllEvents };

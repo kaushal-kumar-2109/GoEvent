@@ -6,6 +6,7 @@ import Login from "../pages/setupPage/login";
 import LandingPage from "../pages/landingPage/landing";
 import EventDetailPage from "../pages/applicationPage/eventDetailPage/eventDetailPage";
 import ForgotPassword from "../pages/setupPage/forgot";
+import EventPage from "../pages/applicationPage/eventPage/eventPage";
 
 // @import pages components
 const NotFound = () => <h2>404 - Page Not Found</h2>;
@@ -18,6 +19,7 @@ const MainRouter = () => {
             <Route path="/GoEvent/signup" element={<Signup />} />
             <Route path="/GoEvent/forgot" element={<ForgotPassword />} />
             <Route path="/GoEvent/login" element={<Login />} />
+            <Route path="/GoEvent/events" element={<EventPage />} />
             <Route path="/GoEvent/event/:id" element={<EventDetailPage />} />
             <Route path="*" element={<NotFound />} />
         </Routes>

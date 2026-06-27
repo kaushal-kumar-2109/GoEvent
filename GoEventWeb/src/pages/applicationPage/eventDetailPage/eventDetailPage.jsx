@@ -145,6 +145,7 @@ export default function EventDetailPage() {
         isLoggedIn={isLoggedIn}
         onLogout={() => setIsLoggedIn(false)}
         onToggleSidebar={() => setSidebarOpen(true)}
+        tag={"none"}
       />
 
       <SideBar
@@ -152,6 +153,7 @@ export default function EventDetailPage() {
         onClose={() => setSidebarOpen(false)}
         isLoggedIn={isLoggedIn}
         onLogout={() => setIsLoggedIn(false)}
+        tag={"none"}
       />
 
       {/* Hero Banner Section */}

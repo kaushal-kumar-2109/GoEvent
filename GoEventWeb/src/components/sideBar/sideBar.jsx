@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import './sideBar.css';
 
-export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout }) {
+export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout, tag }) {
   const navigate = useNavigate();
 
   const handleNavClick = (path) => {
@@ -41,16 +41,16 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout }) {
         {/* Menu Links */}
         <ul className="sidebar-menu">
           <li className="sidebar-menu-item">
-            <Link to="/GoEvent" className="active" onClick={onClose}>
+            <Link to="/GoEvent" className={(tag === "home") ? "active" : ""} onClick={onClose}>
               Home
             </Link>
           </li>
           <li className="sidebar-menu-item">
-            <a href="#events" onClick={(e) => { e.preventDefault(); onClose(); }}>
+            <Link to="/GoEvent/events" className={(tag === "events") ? "active" : ""} onClick={onClose}>
               Events
-            </a>
+            </Link>
           </li>
-          <li className="sidebar-menu-item">
+          {/* <li className="sidebar-menu-item">
             <a href="#categories" onClick={(e) => { e.preventDefault(); onClose(); }}>
               Categories
             </a>
@@ -59,7 +59,7 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout }) {
             <a href="#venues" onClick={(e) => { e.preventDefault(); onClose(); }}>
               Venues
             </a>
-          </li>
+          </li> */}
           <li className="sidebar-menu-item">
             <a href="#about" onClick={(e) => { e.preventDefault(); onClose(); }}>
               About Us

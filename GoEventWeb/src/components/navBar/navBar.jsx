@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './navBar.css';
 
-export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar }) {
+export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar, tag }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -54,17 +54,17 @@ export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar }) {
         {/* Desktop Navigation Links */}
         <ul className="navbar-links">
           <li className="navbar-link-item">
-            <Link to="/GoEvent" className="active">Home</Link>
+            <Link to="/GoEvent" className={(tag === "home") ? "active" : ""}>Home</Link>
           </li>
           <li className="navbar-link-item">
-            <a href="#events" onClick={(e) => e.preventDefault()}>Events</a>
+            <Link to="/GoEvent/events" className={(tag === "events") ? "active" : ""}>Events</Link>
           </li>
-          <li className="navbar-link-item">
+          {/* <li className="navbar-link-item">
             <a href="#categories" onClick={(e) => e.preventDefault()}>Categories</a>
           </li>
           <li className="navbar-link-item">
             <a href="#venues" onClick={(e) => e.preventDefault()}>Venues</a>
-          </li>
+          </li> */}
           <li className="navbar-link-item">
             <a href="#about" onClick={(e) => e.preventDefault()}>About Us</a>
           </li>
