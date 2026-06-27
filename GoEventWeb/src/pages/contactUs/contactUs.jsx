@@ -6,10 +6,10 @@ import { ToastSuccess, ToastError } from '../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
 import './contactUs.css';
 
-export default function ContactUs() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function ContactUs({ isUserLoggedIn, setIsUserLoggedIn }) {
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+
   // Form States
   const [formData, setFormData] = useState({
     name: '',
@@ -23,17 +23,6 @@ export default function ContactUs() {
   // FAQ Accordion State
   const [openFaq, setOpenFaq] = useState(null);
 
-  useEffect(() => {
-    setIsLoggedIn(CheckUserAuth());
-    window.scrollTo(0, 0);
-  }, []);
-
-  const handleLogout = () => {
-    RemoveUserAuth();
-    setIsLoggedIn(false);
-    ToastSuccess("Logout successfully");
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -44,7 +33,7 @@ export default function ContactUs() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Simple validation
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       ToastError("Please fill out all required fields.");
@@ -52,7 +41,7 @@ export default function ContactUs() {
     }
 
     setIsSubmitting(true);
-    
+
     // Simulate API request
     setTimeout(() => {
       setIsSubmitting(false);
@@ -94,8 +83,7 @@ export default function ContactUs() {
   return (
     <div className="contact-wrapper">
       <NavBar
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         onToggleSidebar={() => setSidebarOpen(true)}
         tag={"contact"}
       />
@@ -103,8 +91,7 @@ export default function ContactUs() {
       <SideBar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         tag={"contact"}
       />
 
@@ -117,7 +104,7 @@ export default function ContactUs() {
             We'd Love to <span className="gradient-text-alt">Hear From You</span>
           </h1>
           <p className="contact-hero-subtitle">
-            Have questions about hosting an event, booking tickets, or partnering with us? 
+            Have questions about hosting an event, booking tickets, or partnering with us?
             Drop us a message and our support team will get back to you within 24 hours.
           </p>
         </div>
@@ -127,7 +114,7 @@ export default function ContactUs() {
       <section className="contact-content-section">
         <div className="container">
           <div className="contact-grid">
-            
+
             {/* Contact Form Column */}
             <div className="contact-form-card">
               {submitSuccess ? (
@@ -139,7 +126,7 @@ export default function ContactUs() {
                   </div>
                   <h3>Message Sent!</h3>
                   <p>Thank you for reaching out. A GoEvent support specialist will review your inquiry and follow up shortly.</p>
-                  <button 
+                  <button
                     className="btn-send-another"
                     onClick={() => setSubmitSuccess(false)}
                   >
@@ -149,40 +136,40 @@ export default function ContactUs() {
               ) : (
                 <form onSubmit={handleSubmit} className="contact-form">
                   <h2 className="form-title">Send a Message</h2>
-                  
+
                   <div className="form-group-row">
                     <div className="input-group">
                       <label htmlFor="name">Your Name *</label>
-                      <input 
-                        type="text" 
-                        id="name" 
-                        name="name" 
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
                         value={formData.name}
                         onChange={handleInputChange}
                         placeholder="John Doe"
-                        required 
+                        required
                       />
                     </div>
 
                     <div className="input-group">
                       <label htmlFor="email">Your Email *</label>
-                      <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder="john@example.com"
-                        required 
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="input-group">
                     <label htmlFor="subject">What can we help you with?</label>
-                    <select 
-                      id="subject" 
-                      name="subject" 
+                    <select
+                      id="subject"
+                      name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
                     >
@@ -196,9 +183,9 @@ export default function ContactUs() {
 
                   <div className="input-group">
                     <label htmlFor="message">Your Message *</label>
-                    <textarea 
-                      id="message" 
-                      name="message" 
+                    <textarea
+                      id="message"
+                      name="message"
                       rows="6"
                       value={formData.message}
                       onChange={handleInputChange}
@@ -207,8 +194,8 @@ export default function ContactUs() {
                     ></textarea>
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className={`btn-form-submit ${isSubmitting ? 'submitting' : ''}`}
                     disabled={isSubmitting}
                   >
@@ -233,10 +220,10 @@ export default function ContactUs() {
 
             {/* Info Sidebar Column */}
             <div className="contact-info-column">
-              
+
               {/* Info cards list */}
               <div className="info-cards-stack">
-                
+
                 <div className="info-item-card">
                   <div className="info-icon">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -293,13 +280,13 @@ export default function ContactUs() {
                       </linearGradient>
                     </defs>
                     <rect width="100%" height="100%" fill="url(#mapGridGrad)" rx="8" />
-                    
+
                     {/* Road networks */}
                     <line x1="0" y1="50" x2="300" y2="50" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
                     <line x1="80" y1="0" x2="80" y2="150" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
                     <line x1="220" y1="0" x2="220" y2="150" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
                     <path d="M0 120 C 100 120, 150 20, 300 20" fill="none" stroke="rgba(99, 102, 241, 0.15)" strokeWidth="3" />
-                    
+
                     {/* Water body indicator */}
                     <path d="M250 100 Q 270 120 300 110 L 300 150 L 230 150 Z" fill="rgba(96, 165, 250, 0.08)" />
 
@@ -329,8 +316,8 @@ export default function ContactUs() {
 
           <div className="faq-list">
             {faqs.map((faq, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className={`faq-item-card ${openFaq === idx ? 'expanded' : ''}`}
                 onClick={() => toggleFaq(idx)}
               >
@@ -343,7 +330,7 @@ export default function ContactUs() {
                     </svg>
                   </span>
                 </div>
-                
+
                 <div className="faq-answer-container">
                   <p className="faq-answer">{faq.a}</p>
                 </div>

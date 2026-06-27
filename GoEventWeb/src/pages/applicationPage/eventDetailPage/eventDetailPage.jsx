@@ -11,10 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import './eventDetailPage.css';
 import { CheckUserAuth } from '../../../middleware/chekUserAuth.jsx';
 
-export default function EventDetailPage() {
+export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
   const { id } = useParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [eventData, setEventData] = useState(null);
 
@@ -154,8 +153,7 @@ export default function EventDetailPage() {
   return (
     <div className="event-detail-wrapper">
       <NavBar
-        isLoggedIn={isLoggedIn}
-        onLogout={() => setIsLoggedIn(false)}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         onToggleSidebar={() => setSidebarOpen(true)}
         tag={"none"}
       />
@@ -163,8 +161,7 @@ export default function EventDetailPage() {
       <SideBar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        isLoggedIn={isLoggedIn}
-        onLogout={() => setIsLoggedIn(false)}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         tag={"none"}
       />
 

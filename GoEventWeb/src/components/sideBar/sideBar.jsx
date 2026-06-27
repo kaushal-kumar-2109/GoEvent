@@ -1,13 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
 import './sideBar.css';
 
-export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout, tag }) {
+export default function SideBar({ isOpen, onClose, isUserLoggedIn, setIsUserLoggedIn, tag }) {
   const navigate = useNavigate();
 
   const handleNavClick = (path) => {
     onClose();
     navigate(path);
   };
+
+  const LogOutUser = () => {
+    RemoveUserAuth();
+    setDropdownOpen(false);
+    setIsUserLoggedIn(false);
+    navigate("/GoEvent");
+  }
 
   const handleOverlayClick = (e) => {
     // If the click happened on the overlay container directly (not the drawer card)
@@ -74,7 +81,7 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout, tag }) 
 
         {/* Footer actions depending on Login State */}
         <div className="sidebar-footer">
-          {isLoggedIn ? (
+          {isUserLoggedIn ? (
             <div className="sidebar-user-section">
               <div className="sidebar-profile-card">
                 <div className="sidebar-profile-avatar">
@@ -90,7 +97,7 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout, tag }) 
               </div>
               <button
                 className="sidebar-btn-logout"
-                onClick={() => { onLogout(); onClose(); navigate("/GoEvent"); }}
+                onClick={() => LogOutUser()}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

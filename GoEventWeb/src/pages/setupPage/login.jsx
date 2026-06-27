@@ -5,7 +5,7 @@ import { ToastSuccess, ToastError } from '../../assets/toast';
 import { sendOtp, setUser } from '../../api/postApiHandler/pstData';
 import './setup.css';
 
-export default function Login() {
+export default function Login({ setIsUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -138,6 +138,7 @@ export default function Login() {
             validTill: Date.now() + 7 * 24 * 60 * 60 * 1000
           })
         );
+        setIsUserLoggedIn(true);
         navigate("/GoEvent");
         return;
       } else {

@@ -6,21 +6,10 @@ import { ToastSuccess } from '../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
 import './aboutUs.css';
 
-export default function AboutUs() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function AboutUs({ isUserLoggedIn, setIsUserLoggedIn }) {
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('mission');
-
-  useEffect(() => {
-    setIsLoggedIn(CheckUserAuth());
-    window.scrollTo(0, 0);
-  }, []);
-
-  const handleLogout = () => {
-    RemoveUserAuth();
-    setIsLoggedIn(false);
-    ToastSuccess("Logout successfully");
-  };
 
   const teamMembers = [
     {
@@ -97,8 +86,7 @@ export default function AboutUs() {
   return (
     <div className="about-wrapper">
       <NavBar
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         onToggleSidebar={() => setSidebarOpen(true)}
         tag={"about"}
       />
@@ -106,8 +94,7 @@ export default function AboutUs() {
       <SideBar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         tag={"about"}
       />
 
@@ -121,7 +108,7 @@ export default function AboutUs() {
             <span className="gradient-text">Connect & Experience</span>
           </h1>
           <p className="about-hero-subtitle">
-            GoEvent is the ultimate platform for discovering, organizing, and celebrating experiences. 
+            GoEvent is the ultimate platform for discovering, organizing, and celebrating experiences.
             We make event creation and booking incredibly fast, beautiful, and accessible.
           </p>
         </div>
@@ -136,21 +123,21 @@ export default function AboutUs() {
               <p className="tabs-desc">
                 We believe that human beings thrive on shared experiences. Whether it's a small local meetup, a dynamic music concert, or an international tech summit, GoEvent provides the foundation to host effortlessly.
               </p>
-              
+
               <div className="tab-buttons">
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'mission' ? 'active' : ''}`}
                   onClick={() => setActiveTab('mission')}
                 >
                   Our Mission
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'vision' ? 'active' : ''}`}
                   onClick={() => setActiveTab('vision')}
                 >
                   Our Vision
                 </button>
-                <button 
+                <button
                   className={`tab-btn ${activeTab === 'story' ? 'active' : ''}`}
                   onClick={() => setActiveTab('story')}
                 >
@@ -252,12 +239,12 @@ export default function AboutUs() {
                     <div className="team-socials">
                       <a href={member.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/>
+                          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect width="4" height="12" x="2" y="9" /><circle cx="4" cy="4" r="2" />
                         </svg>
                       </a>
                       <a href={member.twitter} target="_blank" rel="noreferrer" aria-label="Twitter">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+                          <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
                         </svg>
                       </a>
                     </div>

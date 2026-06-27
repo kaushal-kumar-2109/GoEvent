@@ -10,10 +10,9 @@ import { ToastMessage, ToastSuccess } from '../../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../../middleware/chekUserAuth.jsx';
 import './eventPage.css';
 
-export default function EventPage() {
+export default function EventPage({ isUserLoggedIn, setIsUserLoggedIn }) {
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [isFetching, setIsFetching] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // Events and pagination state
@@ -27,17 +26,6 @@ export default function EventPage() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [selectedDate, setSelectedDate] = useState('');
-
-    // Authentication State
-    useEffect(() => {
-        setIsLoggedIn(CheckUserAuth());
-    }, []);
-
-    const handleLogout = () => {
-        RemoveUserAuth();
-        setIsLoggedIn(false);
-        ToastSuccess("Logout successfully");
-    };
 
     // Debounce search query
     useEffect(() => {
@@ -129,8 +117,7 @@ export default function EventPage() {
         <div className="eventpage-wrapper">
             {/* Navigation bar */}
             <NavBar
-                isLoggedIn={isLoggedIn}
-                onLogout={handleLogout}
+                isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
                 onToggleSidebar={() => setSidebarOpen(true)}
                 tag={"events"}
             />
@@ -139,8 +126,7 @@ export default function EventPage() {
             <SideBar
                 isOpen={sidebarOpen}
                 onClose={() => setSidebarOpen(false)}
-                isLoggedIn={isLoggedIn}
-                onLogout={handleLogout}
+                isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
                 tag={"events"}
             />
 

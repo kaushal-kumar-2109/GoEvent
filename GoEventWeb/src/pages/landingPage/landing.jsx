@@ -11,9 +11,8 @@ import { ToastError, ToastSuccess } from '../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
 import { Link } from 'react-router-dom';
 
-export default function LandingPage() {
+export default function LandingPage({ isUserLoggedIn, setIsUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [eventsList, setEventsList] = useState([]);
 
@@ -31,16 +30,8 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    setIsLoggedIn(CheckUserAuth());
     LoadData();
   }, []);
-
-  const handleLogout = () => {
-    RemoveUserAuth();
-    setIsLoggedIn(false);
-    ToastSuccess("Logout successfully");
-  };
-
 
   if (isLoading) {
     return <Loader text="Loading GoEvent" />;
@@ -49,8 +40,7 @@ export default function LandingPage() {
     <div className="landing-wrapper">
       {/* Navigation bar */}
       <NavBar
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         onToggleSidebar={() => setSidebarOpen(true)}
         tag={"home"}
       />
@@ -59,8 +49,7 @@ export default function LandingPage() {
       <SideBar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        isLoggedIn={isLoggedIn}
-        onLogout={handleLogout}
+        isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn}
         tag={"home"}
       />
 
@@ -195,9 +184,9 @@ export default function LandingPage() {
 
       {/* Developer Auth Toggle tool */}
       <div className="dev-auth-switcher">
-        <span className={`dev-auth-dot ${isLoggedIn ? 'active' : 'inactive'}`}></span>
-        <span>Mock User: <strong>{isLoggedIn ? 'LOGGED IN' : 'GUEST'}</strong></span>
-        <button className="dev-auth-btn" onClick={() => setIsLoggedIn(!isLoggedIn)}>
+        <span className={`dev-auth-dot ${isUserLoggedIn ? 'active' : 'inactive'}`}></span>
+        <span>Mock User: <strong>{isUserLoggedIn ? 'LOGGED IN' : 'GUEST'}</strong></span>
+        <button className="dev-auth-btn" onClick={() => { alert("createing fake user!") }}>
           Toggle Auth State
         </button>
       </div>

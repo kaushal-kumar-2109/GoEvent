@@ -1,11 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth';
 import './navBar.css';
 
-export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar, tag }) {
+export default function NavBar({ isUserLoggedIn, setIsUserLoggedIn, onToggleSidebar, tag }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+
+
+  const LogOutUser = () => {
+    RemoveUserAuth();
+    setDropdownOpen(false);
+    setIsUserLoggedIn(false);
+    navigate("/GoEvent");
+  }
 
   // Close dropdown if user clicks outside of it
   useEffect(() => {
@@ -83,7 +92,7 @@ export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar, tag }) {
             </svg>
           </button> */}
 
-          {isLoggedIn ? (
+          {isUserLoggedIn ? (
             <>
               {/* "+ Create Event" Button */}
               <button className="navbar-btn-create" onClick={() => alert('Feature coming soon: Event Planner Studio')}>
@@ -125,7 +134,7 @@ export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar, tag }) {
                       </svg>
                       My Events
                     </button>
-                    <button className="dropdown-item logout" onClick={() => { setDropdownOpen(false); onLogout(); navigate("/GoEvent"); }}>
+                    <button className="dropdown-item logout" onClick={() => LogOutUser()}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
                       </svg>
