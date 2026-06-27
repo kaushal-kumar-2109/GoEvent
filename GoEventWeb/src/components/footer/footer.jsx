@@ -59,10 +59,10 @@ export default function Footer() {
               <a href="#events" onClick={(e) => { e.preventDefault(); window.location.hash = 'events'; }}>Explore Events</a>
             </li>
             <li className="footer-link-item">
-              <a href="#about" onClick={(e) => e.preventDefault()}>About Us</a>
+              <Link to="/GoEvent/about">About Us</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#contact" onClick={(e) => e.preventDefault()}>Contact Us</a>
+              <Link to="/GoEvent/contact">Contact Us</Link>
             </li>
           </ul>
         </div>

@@ -9,6 +9,7 @@ import { categoriesList } from '../../utils/mockData';
 import { getLandData } from '../../api/getApiHandler/getData';
 import { ToastError, ToastSuccess } from '../../assets/toast.jsx';
 import { CheckUserAuth, RemoveUserAuth } from '../../middleware/chekUserAuth.jsx';
+import { Link } from 'react-router-dom';
 
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -74,13 +75,13 @@ export default function LandingPage() {
             Find the best events happening around you and book your experience in just a few clicks.
           </p>
           <div className="hero-buttons">
-            <button className="btn-explore" onClick={() => alert('Browsing all upcoming events.')}>
+            <Link className="btn-explore" to="/GoEvent/events">
               Explore Events
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" x2="19" y1="12" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
-            </button>
+            </Link>
             <button className="btn-how" onClick={() => alert('How GoEvent works demo video.')}>
               How It Works
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -97,12 +98,12 @@ export default function LandingPage() {
       <section className="section-container">
         <div className="section-header">
           <h2 className="section-title">Browse by Category</h2>
-          <a href="#" className="section-link">
+          <Link to="/GoEvent/events" className="section-link">
             View All
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-          </a>
+          </Link>
         </div>
 
         <div className="categories-grid">
@@ -121,12 +122,12 @@ export default function LandingPage() {
       <section className="section-container" id="events">
         <div className="section-header">
           <h2 className="section-title">Featured Events</h2>
-          <a href="#" className="section-link">
+          <Link to="/GoEvent/events" className="section-link">
             View All Events
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-          </a>
+          </Link>
         </div>
 
         <div className="events-grid">

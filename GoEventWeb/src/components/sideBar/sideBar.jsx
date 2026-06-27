@@ -61,14 +61,14 @@ export default function SideBar({ isOpen, onClose, isLoggedIn, onLogout, tag }) 
             </a>
           </li> */}
           <li className="sidebar-menu-item">
-            <a href="#about" onClick={(e) => { e.preventDefault(); onClose(); }}>
+            <Link to="/GoEvent/about" className={(tag === "about") ? "active" : ""} onClick={onClose}>
               About Us
-            </a>
+            </Link>
           </li>
           <li className="sidebar-menu-item">
-            <a href="#contact" onClick={(e) => { e.preventDefault(); onClose(); }}>
+            <Link to="/GoEvent/contact" className={(tag === "contact") ? "active" : ""} onClick={onClose}>
               Contact
-            </a>
+            </Link>
           </li>
         </ul>
 

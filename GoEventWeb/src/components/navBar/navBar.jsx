@@ -66,10 +66,10 @@ export default function NavBar({ isLoggedIn, onLogout, onToggleSidebar, tag }) {
             <a href="#venues" onClick={(e) => e.preventDefault()}>Venues</a>
           </li> */}
           <li className="navbar-link-item">
-            <a href="#about" onClick={(e) => e.preventDefault()}>About Us</a>
+            <Link to="/GoEvent/about" className={(tag === "about") ? "active" : ""}>About Us</Link>
           </li>
           <li className="navbar-link-item">
-            <a href="#contact" onClick={(e) => e.preventDefault()}>Contact</a>
+            <Link to="/GoEvent/contact" className={(tag === "contact") ? "active" : ""}>Contact</Link>
           </li>
         </ul>
 

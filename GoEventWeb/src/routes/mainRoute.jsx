@@ -7,6 +7,8 @@ import LandingPage from "../pages/landingPage/landing";
 import EventDetailPage from "../pages/applicationPage/eventDetailPage/eventDetailPage";
 import ForgotPassword from "../pages/setupPage/forgot";
 import EventPage from "../pages/applicationPage/eventPage/eventPage";
+import AboutUs from "../pages/aboutUs/aboutUs";
+import ContactUs from "../pages/contactUs/contactUs";
 
 // @import pages components
 const NotFound = () => <h2>404 - Page Not Found</h2>;
@@ -21,6 +23,8 @@ const MainRouter = () => {
             <Route path="/GoEvent/login" element={<Login />} />
             <Route path="/GoEvent/events" element={<EventPage />} />
             <Route path="/GoEvent/event/:id" element={<EventDetailPage />} />
+            <Route path="/GoEvent/about" element={<AboutUs />} />
+            <Route path="/GoEvent/contact" element={<ContactUs />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     )

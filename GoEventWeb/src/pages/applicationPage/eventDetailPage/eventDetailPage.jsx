@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import NavBar from '../../../components/navBar/navBar';
 import SideBar from '../../../components/sideBar/sideBar';
@@ -23,6 +24,16 @@ export default function EventDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [commentsList, setCommentsList] = useState([]);
   const [newComment, setNewComment] = useState({ name: '', email: '', comment: '' });
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
+  const handlePlayClick = () => {
+    setIsPlaying(true);
+    if (videoRef.current) {
+      videoRef.current.play();
+    }
+  };
+
   const navigate = useNavigate();
 
   const CheckAuth = async () => {
@@ -38,6 +49,7 @@ export default function EventDetailPage() {
       const res = await getEventById(id);
       if (res && res.flag && res.data && res.data.data) {
         const data = res.data.data;
+        console.log(data);
         setEventData(data);
         setLikesCount(data.likes || 0);
         setCommentsList(data.comments || []);
@@ -255,15 +267,26 @@ export default function EventDetailPage() {
               </h2>
               <div className="video-preview-wrapper">
                 <div className="video-placeholder-container">
-                  <div className="play-button-icon" onClick={() => alert("Playing event introduction stream...")}>
+                  <div className='promotional-video'>
+                    <video
+                      ref={videoRef}
+                      src={`${promotionalVideo}`}
+                      controls={isPlaying} // Shows native controls only after clicking play
+                      preload="metadata"
+                    />                  </div>
+                  <div className="play-button-icon" onClick={() => handlePlayClick}>
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
                       <polygon points="5 3 19 12 5 21 5 3" />
                     </svg>
                   </div>
-                  <h3>Watch Video Trailer</h3>
-                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem', maxWidth: '380px' }}>
-                    Get a quick sneak peek of what the speakers and workshops have lined up for you.
-                  </p>
+                  {(!isPlaying) && (
+                    <>
+                      <h3>Watch Video Trailer</h3>
+                      <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: '0.5rem', maxWidth: '380px' }}>
+                        Get a quick sneak peek of what the speakers and workshops have lined up for you.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -628,6 +651,6 @@ export default function EventDetailPage() {
           Toggle Auth State
         </button>
       </div>
-    </div>
+    </div >
   );
 }
