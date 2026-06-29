@@ -1,6 +1,7 @@
 // ------------------------- requiring packages ------------------------- //
 require("dotenv").config();
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 // ------------------------- import connect function ------------------------- //
 require("./db/connect.js");
@@ -20,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use(cookieParser());
 
 // ------------------------- routes ------------------------- //
 app.use("/GoEvent", getRouter);

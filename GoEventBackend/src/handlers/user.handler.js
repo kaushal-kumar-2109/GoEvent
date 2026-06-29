@@ -103,7 +103,7 @@ const SetUser = async (req, res) => {
             });
             return res.status(200).json({
                 success: true,
-                message: "User logedin successfully!",
+                message: "User loged in successfully!",
                 token: tokenData.token,
                 name: user.name,
                 email: user.email

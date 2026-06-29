@@ -13,6 +13,8 @@ import ContactUs from "../pages/contactUs/contactUs";
 import { CheckUserAuth } from "../middleware/chekUserAuth";
 
 import NotFound from "../pages/notFound/notFound";
+import EventCreate from "../pages/applicationPage/eventCreate/eventCreate";
+import UserProfile from "../pages/applicationPage/userProfile/userProfile";
 
 const MainRouter = () => {
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -30,14 +32,20 @@ const MainRouter = () => {
     return (
         <Routes>
             <Route path="/" element={<Navigate to="/GoEvent" replace />} />
+
             <Route path="/GoEvent" element={<LandingPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/signup" element={<Signup setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/forgot" element={<ForgotPassword />} />
             <Route path="/GoEvent/login" element={<Login setIsUserLoggedIn={setIsUserLoggedIn} />} />
-            <Route path="/GoEvent/events" element={<EventPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
-            <Route path="/GoEvent/event/:id" element={<EventDetailPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/about" element={<AboutUs isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/contact" element={<ContactUs isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+
+            <Route path="/GoEvent/events" element={<EventPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/event/:id" element={<EventDetailPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/event/create-event" element={<EventCreate isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/profile" element={<UserProfile isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+
+
             <Route path="*" element={<NotFound isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
         </Routes>
     )

@@ -642,9 +642,9 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
 
       {/* Developer Auth state switcher */}
       <div className="dev-auth-switcher">
-        <span className={`dev-auth-dot ${isLoggedIn ? 'active' : 'inactive'}`}></span>
-        <span>Mock User: <strong>{isLoggedIn ? 'LOGGED IN' : 'GUEST'}</strong></span>
-        <button className="dev-auth-btn" onClick={() => setIsLoggedIn(!isLoggedIn)}>
+        <span className={`dev-auth-dot ${isUserLoggedIn ? 'active' : 'inactive'}`}></span>
+        <span>Mock User: <strong>{isUserLoggedIn ? 'LOGGED IN' : 'GUEST'}</strong></span>
+        <button className="dev-auth-btn" onClick={() => { alert("facke uesr creating!") }}>
           Toggle Auth State
         </button>
       </div>
