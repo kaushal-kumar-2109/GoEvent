@@ -92,7 +92,7 @@ const GetAllEvents = async (req, res) => {
 
 const CreateEvent = async (req, res) => {
     const { title, shortDescription, description, category, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, availableSeats, contactEmail, contactPhone,
-        venuName, address, city, state, country, pincode, googleMapsLink,
+        venueName, address, city, state, country, pincode, googleMapsLink,
         meetingLink, meetingPassword,
         thumbnailImage, promotionalVideo, website, socialLinks, speakers, faqs, refundPolicy, termsAndConditions
     } = req.body;
@@ -109,8 +109,8 @@ const CreateEvent = async (req, res) => {
             if (!startDate) return res.status(400).json({ tag: "startDate", success: false, message: "Start Date is required!" });
             if (!endDate) return res.status(400).json({ tag: "endDate", success: false, message: "End Date is required!" });
             if (!registrationDeadline) return res.status(400).json({ tag: "registrationDeadline", success: false, message: "Registration Deadline is required!" });
-            if (!ticketPrice) return res.status(400).json({ tag: "ticketPrice", success: false, message: "Ticket Price is required!" });
-            if (!availableSeats) return res.status(400).json({ tag: "availableSeats", success: false, message: "Available Seats is required!" });
+            if (ticketPrice < 0) return res.status(400).json({ tag: "ticketPrice", success: false, message: "Ticket Price is required!" });
+            if (availableSeats == "" || availableSeats < 0) return res.status(400).json({ tag: "availableSeats", success: false, message: "Available Seats is required!" });
             if (!contactEmail) return res.status(400).json({ tag: "contactEmail", success: false, message: "Contact Email is required!" });
             if (!contactPhone) return res.status(400).json({ tag: "contactPhone", success: false, message: "Contact Phone is required!" });
         }
@@ -120,7 +120,7 @@ const CreateEvent = async (req, res) => {
             if (!country) return res.status(400).json({ tag: "country", success: false, message: "Country is required!" });
             if (!pincode) return res.status(400).json({ tag: "pincode", success: false, message: "Pincode is required!" });
             if (!address) return res.status(400).json({ tag: "address", success: false, message: "Address is required!" });
-            if (!venuName) return res.status(400).json({ tag: "venuName", success: false, message: "Venu Name is required!" });
+            if (!venueName) return res.status(400).json({ tag: "venueName", success: false, message: "Venu Name is required!" });
             if (!googleMapsLink) return res.status(400).json({ tag: "googleMapsLink", success: false, message: "Google Maps Link is required!" });
         }
         if (eventMode === "online") {
@@ -129,8 +129,8 @@ const CreateEvent = async (req, res) => {
         }
 
         const newEvent = new Event({
-            title, shortDescription, description, category, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, availableSeats, contactEmail, contactPhone,
-            venuName, address, city, state, country, pincode, googleMapsLink,
+            title, shortDescription, description, category, organizer: req.user._id, organizerName: req.user.name, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, availableSeats, contactEmail, contactPhone,
+            venueName, address, city, state, country, pincode, googleMapsLink,
             meetingLink, meetingPassword,
             thumbnailImage, promotionalVideo, website, socialLinks, speakers, faqs, refundPolicy, termsAndConditions
         });

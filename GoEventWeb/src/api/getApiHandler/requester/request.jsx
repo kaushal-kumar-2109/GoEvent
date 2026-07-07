@@ -1,6 +1,10 @@
 const GetDataCall = async (url) => {
     try {
-        const response = await fetch(url, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
         const data = await response.json();
         if (response.status == 200) {
             return {

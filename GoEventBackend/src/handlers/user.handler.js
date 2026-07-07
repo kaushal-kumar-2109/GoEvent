@@ -52,11 +52,10 @@ const CreateUser = async (req, res) => {
 
         if (tokenData.status) {
             await Token.create({ userId: newUser._id, token: tokenData.token });
-
-            res.cookie("GoEventJWT", tokenData.token, {
+            res.cookie("goeventjwt", tokenData.token, {
                 httpOnly: true,
-                secure: (process.env.NODE_ENV == "local") ? false : true,
-                sameSite: (process.env.NODE_ENV == "local") ? "lax" : "none",
+                secure: (process.env.NODE_ENV === "local") ? false : true,
+                sameSite: (process.env.NODE_ENV === "local") ? "lax" : "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             return res.status(201).json({ success: true, message: "User created successfully!", token: tokenData.token });
@@ -89,12 +88,9 @@ const SetUser = async (req, res) => {
 
         const tokenData = await CreateUserToken(user._id, user.name, user.email);
         if (tokenData.status) {
-            // Upsert operation safely handles updating or creating tokens smoothly
-            await Token.findOneAndUpdate(
-                { userId: user._id },
-                { token: tokenData.token },
-                { upsert: true, returnDocument: "after" }
-            );
+            const oldToken = await Token.findOne({ userId: user._id });
+            if (oldToken) await Token.deleteOne({ userId: user._id });
+            await Token.create({ userId: user._id, token: tokenData.token });
             res.cookie("goeventjwt", tokenData.token, {
                 httpOnly: true,
                 secure: (process.env.NODE_ENV === "local") ? false : true,

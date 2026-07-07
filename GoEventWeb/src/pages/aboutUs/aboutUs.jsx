@@ -13,29 +13,13 @@ export default function AboutUs({ isUserLoggedIn, setIsUserLoggedIn }) {
 
   const teamMembers = [
     {
-      name: "Sophia Martinez",
-      role: "CEO & Co-Founder",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-      bio: "Sophia has over a decade of experience in event operations and is passionate about building tools that bring community ideas to life.",
-      linkedin: "https://linkedin.com",
+      name: "Kishore Kumar",
+      role: "Full Stack Developer",
+      image: "https://png.pngtree.com/png-vector/20231019/ourmid/pngtree-user-profile-avatar-png-image_10211467.png",
+      bio: "A full-stack engineer and open-source enthusiast. User friendly architecture, ensuring security, scalability, and seamless check-ins.",
+      linkedin: "www.linkedin.com/in/kishore-kumar21-",
       twitter: "https://twitter.com"
     },
-    {
-      name: "Marcus Chen",
-      role: "CTO & Co-Founder",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-      bio: "A full-stack engineer and open-source enthusiast. Marcus leads the architecture, ensuring security, scalability, and seamless check-ins.",
-      linkedin: "https://linkedin.com",
-      twitter: "https://twitter.com"
-    },
-    {
-      name: "Elena Rostova",
-      role: "Head of Community",
-      image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
-      bio: "Elena connects creators and organizers around the globe, driving program designs and partnerships that grow the GoEvent ecosystem.",
-      linkedin: "https://linkedin.com",
-      twitter: "https://twitter.com"
-    }
   ];
 
   const values = [

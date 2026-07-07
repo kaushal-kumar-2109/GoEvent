@@ -44,12 +44,10 @@ const EVENT = new mongoose.Schema({
     address: String,
     city: {
         type: String,
-        required: true,
         index: true
     },
     state: {
         type: String,
-        required: true
     },
     country: {
         type: String,

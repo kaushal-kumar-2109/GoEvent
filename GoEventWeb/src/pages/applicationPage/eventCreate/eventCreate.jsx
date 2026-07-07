@@ -227,12 +227,11 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
         setIsLoading(true);
         try {
             const response = await createEvent(formData);
-            console.log(response);
             if (response.flag) {
-                ToastSuccess(response.message || "Event created successfully!");
+                ToastSuccess(response.data.message || "Event created successfully!");
                 setIsSubmitted(true);
             } else {
-                ToastError(response.message || "Failed to create event. Please try again.");
+                ToastError(response.data.message || "Failed to create event. Please try again.");
             }
         } catch (error) {
             console.error("Submission error:", error);

@@ -208,9 +208,17 @@
   border-radius: 50%;
 }
 
-.dot.red { background-color: #ef4444; }
-.dot.yellow { background-color: #f59e0b; }
-.dot.green { background-color: #10b981; }
+.dot.red {
+  background-color: #ef4444;
+}
+
+.dot.yellow {
+  background-color: #f59e0b;
+}
+
+.dot.green {
+  background-color: #10b981;
+}
 
 .board-title {
   color: #64748b;
@@ -248,10 +256,25 @@
   font-weight: 700;
 }
 
-.highlight-purple { color: #c084fc; text-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
-.highlight-blue { color: #60a5fa; text-shadow: 0 0 10px rgba(96, 165, 250, 0.3); }
-.highlight-green { color: #34d399; text-shadow: 0 0 10px rgba(52, 211, 153, 0.3); }
-.highlight-orange { color: #fb923c; text-shadow: 0 0 10px rgba(251, 146, 60, 0.3); }
+.highlight-purple {
+  color: #c084fc;
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+}
+
+.highlight-blue {
+  color: #60a5fa;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+.highlight-green {
+  color: #34d399;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.3);
+}
+
+.highlight-orange {
+  color: #fb923c;
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.3);
+}
 
 /* 3. CORE VALUES SECTION */
 .about-values {
@@ -340,17 +363,26 @@
 }
 
 .team-grid {
-  display: grid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   grid-template-columns: repeat(3, 1fr);
   gap: 2.5rem;
 }
 
 .team-card {
+  width: 30%;
   background: #131726;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
   overflow: hidden;
   transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+@media (width<700px) {
+  .team-card {
+    width: 100%;
+  }
 }
 
 .team-card:hover {
@@ -362,7 +394,8 @@
 .team-image-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 100%; /* Square aspect ratio */
+  padding-top: 100%;
+  /* Square aspect ratio */
   overflow: hidden;
 }
 
@@ -572,6 +605,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -579,10 +613,13 @@
 }
 
 @keyframes pulseBadge {
-  0%, 100% {
+
+  0%,
+  100% {
     border-color: rgba(129, 140, 248, 0.25);
     box-shadow: 0 0 0px rgba(129, 140, 248, 0);
   }
+
   50% {
     border-color: rgba(129, 140, 248, 0.5);
     box-shadow: 0 0 10px rgba(129, 140, 248, 0.2);
@@ -594,6 +631,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -613,6 +651,7 @@
   .tabs-grid {
     gap: 3rem;
   }
+
   .team-grid {
     gap: 1.5rem;
   }
@@ -623,11 +662,13 @@
     grid-template-columns: 1fr;
     gap: 3rem;
   }
+
   .tabs-right {
     max-width: 500px;
     margin: 0 auto;
     width: 100%;
   }
+
   .team-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -637,52 +678,60 @@
   .about-hero {
     padding: 6.5rem 1rem 4rem 1rem;
   }
+
   .about-hero-title {
     font-size: 2.35rem;
   }
+
   .about-hero-subtitle {
     font-size: 1rem;
   }
-  
+
   .container {
     padding: 0 1.25rem;
   }
-  
+
   .tab-buttons {
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+
   .tab-btn {
     font-size: 0.95rem;
     padding: 0.4rem 0.5rem;
   }
-  
+
   .section-title {
     font-size: 2rem;
   }
-  
+
   .team-grid {
     grid-template-columns: 1fr;
     max-width: 400px;
     margin: 0 auto;
   }
-  
+
   .cta-box {
     padding: 3rem 1.5rem;
   }
+
   .cta-title {
     font-size: 1.85rem;
   }
+
   .cta-desc {
     font-size: 1rem;
     margin-bottom: 2rem;
   }
+
   .cta-buttons {
     flex-direction: column;
     width: 100%;
     gap: 0.75rem;
   }
-  .btn-cta-primary, .btn-cta-secondary {
+
+  .btn-cta-primary,
+  .btn-cta-secondary {
     width: 100%;
     padding: 0.8rem 0;
   }
