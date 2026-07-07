@@ -9,6 +9,7 @@ import ROUTERS from '../../../api/connect.api';
 import { CheckUserAuth } from '../../../middleware/chekUserAuth';
 import { ToastSuccess, ToastError, ToastWarning, ToastInfo } from '../../../assets/toast';
 import './eventCreate.css';
+import { createEvent } from '../../../api/postApiHandler/pstData';
 
 export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
     const navigate = useNavigate();
@@ -149,7 +150,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
             case 2:
                 if (!formData.startDate) return "Start Date & Time is required";
                 if (!formData.endDate) return "End Date & Time is required";
-                
+
                 const start = new Date(formData.startDate);
                 const end = new Date(formData.endDate);
                 if (end <= start) return "End date must be after the start date";
@@ -158,7 +159,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                     const deadline = new Date(formData.registrationDeadline);
                     if (deadline > start) return "Registration deadline must be before start date";
                 }
-                
+
                 if (Number(formData.ticketPrice) < 0) return "Ticket Price cannot be negative";
                 if (formData.availableSeats && Number(formData.availableSeats) <= 0) return "Seats must be greater than 0";
                 return null;
@@ -217,7 +218,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
     // Form Submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!agreedToTerms) {
             ToastWarning("You must agree to the Terms and Conditions to publish this event.");
             return;
@@ -225,30 +226,13 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
 
         setIsLoading(true);
         try {
-            // Retrieve auth token if available
-            const userDataStr = localStorage.getItem("GoEventUserData");
-            const token = userDataStr ? JSON.parse(userDataStr).token : '';
-
-            // Derive API route dynamically from login endpoint
-            const basePostUrl = ROUTERS.POST_ROUTE.setUser;
-            const targetUrl = basePostUrl.replace("/set-user", "/create-event");
-
-            const response = await fetch(targetUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData),
-                credentials: 'include' // include session cookies if configured
-            });
-
-            const result = await response.json();
-            if (response.status === 200 || response.status === 201 || result.success) {
-                ToastSuccess(result.message || "Event created successfully!");
+            const response = await createEvent(formData);
+            console.log(response);
+            if (response.flag) {
+                ToastSuccess(response.message || "Event created successfully!");
                 setIsSubmitted(true);
             } else {
-                ToastError(result.message || "Failed to create event. Please try again.");
+                ToastError(response.message || "Failed to create event. Please try again.");
             }
         } catch (error) {
             console.error("Submission error:", error);
@@ -306,20 +290,20 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
     return (
         <div className="eventcreate-wrapper">
             {/* Header / Navbar */}
-            <NavBar 
-                isUserLoggedIn={isUserLoggedIn} 
-                setIsUserLoggedIn={setIsUserLoggedIn} 
-                onToggleSidebar={() => setSidebarOpen(true)} 
-                tag="create" 
+            <NavBar
+                isUserLoggedIn={isUserLoggedIn}
+                setIsUserLoggedIn={setIsUserLoggedIn}
+                onToggleSidebar={() => setSidebarOpen(true)}
+                tag="create"
             />
 
             {/* Sidebar drawer */}
-            <SideBar 
-                isOpen={sidebarOpen} 
-                onClose={() => setSidebarOpen(false)} 
-                isUserLoggedIn={isUserLoggedIn} 
-                setIsUserLoggedIn={setIsUserLoggedIn} 
-                tag="create" 
+            <SideBar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                isUserLoggedIn={isUserLoggedIn}
+                setIsUserLoggedIn={setIsUserLoggedIn}
+                tag="create"
             />
 
             {/* Banner Header */}
@@ -342,22 +326,22 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                 <section className="stepper-wrapper">
                     <div className="stepper">
                         <div className="stepper-progress-bar" style={{ width: `${getProgressPercentage()}%` }}></div>
-                        
+
                         <div className={`step-node ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`} onClick={() => currentStep > 1 && setCurrentStep(1)}>
                             <div className="step-badge">{renderStepIcon(1)}</div>
                             <span className="step-text">Essentials</span>
                         </div>
-                        
+
                         <div className={`step-node ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`} onClick={() => currentStep > 2 && setCurrentStep(2)}>
                             <div className="step-badge">{renderStepIcon(2)}</div>
                             <span className="step-text">Schedule & Price</span>
                         </div>
-                        
+
                         <div className={`step-node ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`} onClick={() => currentStep > 3 && setCurrentStep(3)}>
                             <div className="step-badge">{renderStepIcon(3)}</div>
                             <span className="step-text">Location details</span>
                         </div>
-                        
+
                         <div className={`step-node ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`} onClick={() => currentStep > 4 && setCurrentStep(4)}>
                             <div className="step-badge">{renderStepIcon(4)}</div>
                             <span className="step-text">Contact & Socials</span>
@@ -413,7 +397,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                     ) : (
                         <form className="wizard-card" onSubmit={handleSubmit}>
                             <div className="step-content-container">
-                                
+
                                 {/* STEP 1: ESSENTIALS */}
                                 {currentStep === 1 && (
                                     <div className="step-pane">
@@ -424,17 +408,17 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         <div className="form-grid">
                                             <div className="form-group full-width">
                                                 <label className="form-label label-required" htmlFor="title">Event Title</label>
-                                                <input 
-                                                    type="text" id="title" name="title" className="form-input" 
-                                                    placeholder="e.g. Rock Fest 2026 or AI Boot Camp" 
-                                                    value={formData.title} onChange={handleInputChange} required 
+                                                <input
+                                                    type="text" id="title" name="title" className="form-input"
+                                                    placeholder="e.g. Rock Fest 2026 or AI Boot Camp"
+                                                    value={formData.title} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="category">Category</label>
-                                                <select 
-                                                    id="category" name="category" className="form-select" 
+                                                <select
+                                                    id="category" name="category" className="form-select"
                                                     value={formData.category} onChange={handleInputChange} required
                                                 >
                                                     <option value="">-- Choose Category --</option>
@@ -446,28 +430,28 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
 
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="bannerImage">Banner Image URL</label>
-                                                <input 
-                                                    type="url" id="bannerImage" name="bannerImage" className="form-input" 
-                                                    placeholder="https://example.com/banner.jpg" 
-                                                    value={formData.bannerImage} onChange={handleInputChange} required 
+                                                <input
+                                                    type="url" id="bannerImage" name="bannerImage" className="form-input"
+                                                    placeholder="https://example.com/banner.jpg"
+                                                    value={formData.bannerImage} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group full-width">
                                                 <label className="form-label label-required" htmlFor="shortDescription">Short Summary</label>
-                                                <input 
-                                                    type="text" id="shortDescription" name="shortDescription" className="form-input" 
-                                                    placeholder="A brief hook (maximum 2 lines) displayed in listings." 
-                                                    value={formData.shortDescription} onChange={handleInputChange} required 
+                                                <input
+                                                    type="text" id="shortDescription" name="shortDescription" className="form-input"
+                                                    placeholder="A brief hook (maximum 2 lines) displayed in listings."
+                                                    value={formData.shortDescription} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group full-width">
                                                 <label className="form-label label-required" htmlFor="description">Detailed Description</label>
-                                                <textarea 
-                                                    id="description" name="description" className="form-textarea" 
-                                                    placeholder="Describe agenda, highlights, instructions, prerequisites, etc." 
-                                                    value={formData.description} onChange={handleInputChange} required 
+                                                <textarea
+                                                    id="description" name="description" className="form-textarea"
+                                                    placeholder="Describe agenda, highlights, instructions, prerequisites, etc."
+                                                    value={formData.description} onChange={handleInputChange} required
                                                 />
                                             </div>
                                         </div>
@@ -484,43 +468,43 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         <div className="form-grid">
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="startDate">Start Date & Time</label>
-                                                <input 
-                                                    type="datetime-local" id="startDate" name="startDate" className="form-input" 
-                                                    value={formData.startDate} onChange={handleInputChange} required 
+                                                <input
+                                                    type="datetime-local" id="startDate" name="startDate" className="form-input"
+                                                    value={formData.startDate} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="endDate">End Date & Time</label>
-                                                <input 
-                                                    type="datetime-local" id="endDate" name="endDate" className="form-input" 
-                                                    value={formData.endDate} onChange={handleInputChange} required 
+                                                <input
+                                                    type="datetime-local" id="endDate" name="endDate" className="form-input"
+                                                    value={formData.endDate} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="registrationDeadline">Registration Deadline</label>
-                                                <input 
-                                                    type="datetime-local" id="registrationDeadline" name="registrationDeadline" className="form-input" 
-                                                    value={formData.registrationDeadline} onChange={handleInputChange} 
+                                                <input
+                                                    type="datetime-local" id="registrationDeadline" name="registrationDeadline" className="form-input"
+                                                    value={formData.registrationDeadline} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="ticketPrice">Ticket Price (₹)</label>
-                                                <input 
-                                                    type="number" id="ticketPrice" name="ticketPrice" className="form-input" 
+                                                <input
+                                                    type="number" id="ticketPrice" name="ticketPrice" className="form-input"
                                                     min="0" placeholder="0 for Free entry"
-                                                    value={formData.ticketPrice} onChange={handleInputChange} 
+                                                    value={formData.ticketPrice} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="availableSeats">Available Seats / Capacities</label>
-                                                <input 
-                                                    type="number" id="availableSeats" name="availableSeats" className="form-input" 
+                                                <input
+                                                    type="number" id="availableSeats" name="availableSeats" className="form-input"
                                                     min="1" placeholder="Unlimited if left blank"
-                                                    value={formData.availableSeats} onChange={handleInputChange} 
+                                                    value={formData.availableSeats} onChange={handleInputChange}
                                                 />
                                             </div>
                                         </div>
@@ -538,7 +522,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         <div className="form-group full-width" style={{ marginBottom: '1.5rem' }}>
                                             <label className="form-label">Select Event Mode</label>
                                             <div className="mode-toggle-container">
-                                                <div 
+                                                <div
                                                     className={`mode-card ${formData.eventMode === 'offline' ? 'selected' : ''}`}
                                                     onClick={() => setFormData(prev => ({ ...prev, eventMode: 'offline' }))}
                                                 >
@@ -554,7 +538,7 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                                     </div>
                                                 </div>
 
-                                                <div 
+                                                <div
                                                     className={`mode-card ${formData.eventMode === 'online' ? 'selected' : ''}`}
                                                     onClick={() => setFormData(prev => ({ ...prev, eventMode: 'online' }))}
                                                 >
@@ -578,33 +562,33 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                                 <>
                                                     <div className="form-group full-width">
                                                         <label className="form-label label-required" htmlFor="venueName">Venue Name</label>
-                                                        <input 
-                                                            type="text" id="venueName" name="venueName" className="form-input" 
-                                                            placeholder="e.g. Science Auditorium or Central Park Ground" 
-                                                            value={formData.venueName} onChange={handleInputChange} required 
+                                                        <input
+                                                            type="text" id="venueName" name="venueName" className="form-input"
+                                                            placeholder="e.g. Science Auditorium or Central Park Ground"
+                                                            value={formData.venueName} onChange={handleInputChange} required
                                                         />
                                                     </div>
                                                     <div className="form-group full-width">
                                                         <label className="form-label label-required" htmlFor="address">Street Address</label>
-                                                        <input 
-                                                            type="text" id="address" name="address" className="form-input" 
-                                                            placeholder="Building block, road, sector details" 
-                                                            value={formData.address} onChange={handleInputChange} required 
+                                                        <input
+                                                            type="text" id="address" name="address" className="form-input"
+                                                            placeholder="Building block, road, sector details"
+                                                            value={formData.address} onChange={handleInputChange} required
                                                         />
                                                     </div>
                                                     <div className="form-group">
                                                         <label className="form-label" htmlFor="pincode">Pincode / ZIP Code</label>
-                                                        <input 
-                                                            type="text" id="pincode" name="pincode" className="form-input" 
-                                                            value={formData.pincode} onChange={handleInputChange} 
+                                                        <input
+                                                            type="text" id="pincode" name="pincode" className="form-input"
+                                                            value={formData.pincode} onChange={handleInputChange}
                                                         />
                                                     </div>
                                                     <div className="form-group">
                                                         <label className="form-label" htmlFor="googleMapsLink">Google Maps Link</label>
-                                                        <input 
-                                                            type="url" id="googleMapsLink" name="googleMapsLink" className="form-input" 
-                                                            placeholder="https://maps.google.com/..." 
-                                                            value={formData.googleMapsLink} onChange={handleInputChange} 
+                                                        <input
+                                                            type="url" id="googleMapsLink" name="googleMapsLink" className="form-input"
+                                                            placeholder="https://maps.google.com/..."
+                                                            value={formData.googleMapsLink} onChange={handleInputChange}
                                                         />
                                                     </div>
                                                 </>
@@ -612,18 +596,18 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                                 <>
                                                     <div className="form-group full-width">
                                                         <label className="form-label label-required" htmlFor="meetingLink">Meeting Link / Webinar URL</label>
-                                                        <input 
-                                                            type="url" id="meetingLink" name="meetingLink" className="form-input" 
-                                                            placeholder="Zoom, Google Meet, MS Teams, etc." 
-                                                            value={formData.meetingLink} onChange={handleInputChange} required 
+                                                        <input
+                                                            type="url" id="meetingLink" name="meetingLink" className="form-input"
+                                                            placeholder="Zoom, Google Meet, MS Teams, etc."
+                                                            value={formData.meetingLink} onChange={handleInputChange} required
                                                         />
                                                     </div>
                                                     <div className="form-group">
                                                         <label className="form-label" htmlFor="meetingPassword">Meeting Password / Access Key</label>
-                                                        <input 
-                                                            type="text" id="meetingPassword" name="meetingPassword" className="form-input" 
-                                                            placeholder="Code/password to join (if any)" 
-                                                            value={formData.meetingPassword} onChange={handleInputChange} 
+                                                        <input
+                                                            type="text" id="meetingPassword" name="meetingPassword" className="form-input"
+                                                            placeholder="Code/password to join (if any)"
+                                                            value={formData.meetingPassword} onChange={handleInputChange}
                                                         />
                                                     </div>
                                                     <div className="form-group" style={{ visibility: 'hidden' }}></div>
@@ -633,27 +617,27 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                             {/* Common Required fields for MongoDB Indexes */}
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="city">City</label>
-                                                <input 
-                                                    type="text" id="city" name="city" className="form-input" 
-                                                    placeholder="e.g. Mumbai or Virtual/Remote" 
-                                                    value={formData.city} onChange={handleInputChange} required 
+                                                <input
+                                                    type="text" id="city" name="city" className="form-input"
+                                                    placeholder="e.g. Mumbai or Virtual/Remote"
+                                                    value={formData.city} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label label-required" htmlFor="state">State</label>
-                                                <input 
-                                                    type="text" id="state" name="state" className="form-input" 
-                                                    placeholder="e.g. Maharashtra or Online" 
-                                                    value={formData.state} onChange={handleInputChange} required 
+                                                <input
+                                                    type="text" id="state" name="state" className="form-input"
+                                                    placeholder="e.g. Maharashtra or Online"
+                                                    value={formData.state} onChange={handleInputChange} required
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="country">Country</label>
-                                                <input 
-                                                    type="text" id="country" name="country" className="form-input" 
-                                                    value={formData.country} onChange={handleInputChange} 
+                                                <input
+                                                    type="text" id="country" name="country" className="form-input"
+                                                    value={formData.country} onChange={handleInputChange}
                                                 />
                                             </div>
                                         </div>
@@ -670,64 +654,64 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         <div className="form-grid">
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="contactEmail">Contact Email</label>
-                                                <input 
-                                                    type="email" id="contactEmail" name="contactEmail" className="form-input" 
-                                                    placeholder="info@yourcompany.com" 
-                                                    value={formData.contactEmail} onChange={handleInputChange} 
+                                                <input
+                                                    type="email" id="contactEmail" name="contactEmail" className="form-input"
+                                                    placeholder="info@yourcompany.com"
+                                                    value={formData.contactEmail} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="contactPhone">Contact Phone</label>
-                                                <input 
-                                                    type="tel" id="contactPhone" name="contactPhone" className="form-input" 
-                                                    placeholder="e.g. +91 9988776655" 
-                                                    value={formData.contactPhone} onChange={handleInputChange} 
+                                                <input
+                                                    type="tel" id="contactPhone" name="contactPhone" className="form-input"
+                                                    placeholder="e.g. +91 9988776655"
+                                                    value={formData.contactPhone} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group full-width">
                                                 <label className="form-label" htmlFor="website">Official Website URL</label>
-                                                <input 
-                                                    type="url" id="website" name="website" className="form-input" 
-                                                    placeholder="https://mywebsite.com" 
-                                                    value={formData.website} onChange={handleInputChange} 
+                                                <input
+                                                    type="url" id="website" name="website" className="form-input"
+                                                    placeholder="https://mywebsite.com"
+                                                    value={formData.website} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="instagram">Instagram Username</label>
-                                                <input 
-                                                    type="text" id="instagram" name="instagram" className="form-input" 
-                                                    placeholder="username" 
-                                                    value={formData.socialLinks.instagram} onChange={handleSocialChange} 
+                                                <input
+                                                    type="text" id="instagram" name="instagram" className="form-input"
+                                                    placeholder="username"
+                                                    value={formData.socialLinks.instagram} onChange={handleSocialChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="linkedin">LinkedIn Profile URL</label>
-                                                <input 
-                                                    type="text" id="linkedin" name="linkedin" className="form-input" 
-                                                    placeholder="https://linkedin.com/in/username" 
-                                                    value={formData.socialLinks.linkedin} onChange={handleSocialChange} 
+                                                <input
+                                                    type="text" id="linkedin" name="linkedin" className="form-input"
+                                                    placeholder="https://linkedin.com/in/username"
+                                                    value={formData.socialLinks.linkedin} onChange={handleSocialChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="facebook">Facebook Page URL</label>
-                                                <input 
-                                                    type="text" id="facebook" name="facebook" className="form-input" 
-                                                    placeholder="https://facebook.com/..." 
-                                                    value={formData.socialLinks.facebook} onChange={handleSocialChange} 
+                                                <input
+                                                    type="text" id="facebook" name="facebook" className="form-input"
+                                                    placeholder="https://facebook.com/..."
+                                                    value={formData.socialLinks.facebook} onChange={handleSocialChange}
                                                 />
                                             </div>
 
                                             <div className="form-group">
                                                 <label className="form-label" htmlFor="twitter">Twitter / X Handle</label>
-                                                <input 
-                                                    type="text" id="twitter" name="twitter" className="form-input" 
-                                                    placeholder="username" 
-                                                    value={formData.socialLinks.twitter} onChange={handleSocialChange} 
+                                                <input
+                                                    type="text" id="twitter" name="twitter" className="form-input"
+                                                    placeholder="username"
+                                                    value={formData.socialLinks.twitter} onChange={handleSocialChange}
                                                 />
                                             </div>
                                         </div>
@@ -752,37 +736,37 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                                         <div className="form-grid">
                                                             <div className="form-group">
                                                                 <label className="form-label label-required">Speaker Name</label>
-                                                                <input 
-                                                                    type="text" className="form-input" placeholder="Full name" 
-                                                                    value={spk.name} onChange={(e) => handleSpeakerChange(idx, 'name', e.target.value)} required 
+                                                                <input
+                                                                    type="text" className="form-input" placeholder="Full name"
+                                                                    value={spk.name} onChange={(e) => handleSpeakerChange(idx, 'name', e.target.value)} required
                                                                 />
                                                             </div>
                                                             <div className="form-group">
                                                                 <label className="form-label">Designation / Role</label>
-                                                                <input 
-                                                                    type="text" className="form-input" placeholder="e.g. Lead Guitarist or Senior Consultant" 
-                                                                    value={spk.designation} onChange={(e) => handleSpeakerChange(idx, 'designation', e.target.value)} 
+                                                                <input
+                                                                    type="text" className="form-input" placeholder="e.g. Lead Guitarist or Senior Consultant"
+                                                                    value={spk.designation} onChange={(e) => handleSpeakerChange(idx, 'designation', e.target.value)}
                                                                 />
                                                             </div>
                                                             <div className="form-group">
                                                                 <label className="form-label">Company / Band</label>
-                                                                <input 
-                                                                    type="text" className="form-input" placeholder="e.g. Spotify or Independent" 
-                                                                    value={spk.company} onChange={(e) => handleSpeakerChange(idx, 'company', e.target.value)} 
+                                                                <input
+                                                                    type="text" className="form-input" placeholder="e.g. Spotify or Independent"
+                                                                    value={spk.company} onChange={(e) => handleSpeakerChange(idx, 'company', e.target.value)}
                                                                 />
                                                             </div>
                                                             <div className="form-group">
                                                                 <label className="form-label">Speaker Image URL</label>
-                                                                <input 
-                                                                    type="url" className="form-input" placeholder="https://example.com/avatar.jpg" 
-                                                                    value={spk.image} onChange={(e) => handleSpeakerChange(idx, 'image', e.target.value)} 
+                                                                <input
+                                                                    type="url" className="form-input" placeholder="https://example.com/avatar.jpg"
+                                                                    value={spk.image} onChange={(e) => handleSpeakerChange(idx, 'image', e.target.value)}
                                                                 />
                                                             </div>
                                                             <div className="form-group full-width">
                                                                 <label className="form-label">Bio Details</label>
-                                                                <textarea 
-                                                                    rows="2" className="form-input" style={{ minHeight: '60px' }} placeholder="Short introductory sentence..." 
-                                                                    value={spk.bio} onChange={(e) => handleSpeakerChange(idx, 'bio', e.target.value)} 
+                                                                <textarea
+                                                                    rows="2" className="form-input" style={{ minHeight: '60px' }} placeholder="Short introductory sentence..."
+                                                                    value={spk.bio} onChange={(e) => handleSpeakerChange(idx, 'bio', e.target.value)}
                                                                 />
                                                             </div>
                                                         </div>
@@ -806,16 +790,16 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                                         <button type="button" className="remove-repeater-btn" onClick={() => removeFaq(idx)}>&times;</button>
                                                         <div className="form-group" style={{ marginBottom: '1rem' }}>
                                                             <label className="form-label label-required">Question</label>
-                                                            <input 
-                                                                type="text" className="form-input" placeholder="e.g. Is parking available? or Do we get certificate?" 
-                                                                value={faq.question} onChange={(e) => handleFaqChange(idx, 'question', e.target.value)} required 
+                                                            <input
+                                                                type="text" className="form-input" placeholder="e.g. Is parking available? or Do we get certificate?"
+                                                                value={faq.question} onChange={(e) => handleFaqChange(idx, 'question', e.target.value)} required
                                                             />
                                                         </div>
                                                         <div className="form-group">
                                                             <label className="form-label label-required">Answer</label>
-                                                            <textarea 
-                                                                rows="2" className="form-input" style={{ minHeight: '60px' }} placeholder="Provide detailed response..." 
-                                                                value={faq.answer} onChange={(e) => handleFaqChange(idx, 'answer', e.target.value)} required 
+                                                            <textarea
+                                                                rows="2" className="form-input" style={{ minHeight: '60px' }} placeholder="Provide detailed response..."
+                                                                value={faq.answer} onChange={(e) => handleFaqChange(idx, 'answer', e.target.value)} required
                                                             />
                                                         </div>
                                                     </div>
@@ -842,27 +826,27 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                             <div className="form-group full-width">
                                                 <label className="form-label" htmlFor="refundPolicy">Refund Policy / Ticket Policies</label>
-                                                <textarea 
-                                                    id="refundPolicy" name="refundPolicy" className="form-textarea" 
-                                                    placeholder="Specify rules for refund, cancellation, ticket transfers..." 
-                                                    value={formData.refundPolicy} onChange={handleInputChange} 
+                                                <textarea
+                                                    id="refundPolicy" name="refundPolicy" className="form-textarea"
+                                                    placeholder="Specify rules for refund, cancellation, ticket transfers..."
+                                                    value={formData.refundPolicy} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div className="form-group full-width">
                                                 <label className="form-label" htmlFor="termsAndConditions">Terms & Conditions</label>
-                                                <textarea 
-                                                    id="termsAndConditions" name="termsAndConditions" className="form-textarea" 
-                                                    placeholder="Specify age limits, item restrictions, security checks..." 
-                                                    value={formData.termsAndConditions} onChange={handleInputChange} 
+                                                <textarea
+                                                    id="termsAndConditions" name="termsAndConditions" className="form-textarea"
+                                                    placeholder="Specify age limits, item restrictions, security checks..."
+                                                    value={formData.termsAndConditions} onChange={handleInputChange}
                                                 />
                                             </div>
 
                                             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <input 
-                                                    type="checkbox" id="agreed" checked={agreedToTerms} 
-                                                    onChange={(e) => setAgreedToTerms(e.target.checked)} 
-                                                    style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '3px' }} 
+                                                <input
+                                                    type="checkbox" id="agreed" checked={agreedToTerms}
+                                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                                                    style={{ width: '18px', height: '18px', cursor: 'pointer', marginTop: '3px' }}
                                                 />
                                                 <label htmlFor="agreed" style={{ fontSize: '0.85rem', color: '#94a3b8', cursor: 'pointer', lineHeight: '1.4' }}>
                                                     I authorize that all event photos, scheduling dates, venue addresses, and description details provided are accurate. I acknowledge that tickets sale collections will be routed via GoEvent Escrow protocols.
@@ -875,10 +859,10 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
 
                             {/* Buttons footer */}
                             <div className="wizard-actions">
-                                <button 
-                                    type="button" 
-                                    className="back-btn" 
-                                    onClick={handleBack} 
+                                <button
+                                    type="button"
+                                    className="back-btn"
+                                    onClick={handleBack}
                                     disabled={currentStep === 1}
                                 >
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -886,11 +870,11 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                     </svg>
                                     Back
                                 </button>
-                                
+
                                 {currentStep < 6 ? (
-                                    <button 
-                                        type="button" 
-                                        className="next-btn" 
+                                    <button
+                                        type="button"
+                                        className="next-btn"
                                         onClick={handleNext}
                                     >
                                         Next Step
@@ -899,8 +883,8 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                         </svg>
                                     </button>
                                 ) : (
-                                    <button 
-                                        type="submit" 
+                                    <button
+                                        type="submit"
                                         className="next-btn"
                                         style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 4px 15px rgba(16, 185, 129, 0.25)' }}
                                     >
@@ -958,11 +942,11 @@ export default function EventCreate({ isUserLoggedIn, setIsUserLoggedIn }) {
                                     "Mon, 1 Jan | 00:00 AM"
                                 )}
                             </span>
-                            
+
                             <h4 className="preview-title">
                                 {formData.title || "Untitled Special Event"}
                             </h4>
-                            
+
                             <p className="preview-desc">
                                 {formData.shortDescription || "Write a brief attractive slogan or description highlights of your event."}
                             </p>

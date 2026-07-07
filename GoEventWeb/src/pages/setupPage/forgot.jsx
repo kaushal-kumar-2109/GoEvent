@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Loader from '../../components/loader/loader';
 import { useNavigate } from 'react-router-dom';
 import { sendOtp, updateUserPassword } from '../../api/postApiHandler/pstData';
-import { ToastSuccess, ToastError } from '../../assets/toast';
+import { ToastSuccess, ToastError, ToastInfo } from '../../assets/toast';
 import './setup.css';
 
-export default function ForgotPassword() {
+export default function ForgotPassword({ isUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -24,10 +24,12 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 200);
-    return () => clearTimeout(timer);
+    setIsLoading(true);
+    if (isUserLoggedIn) {
+      ToastInfo("You already Loggedin!");
+      navigate("/GoEvent");
+    }
+    setIsLoading(false);
   }, []);
 
   // Email validation helper

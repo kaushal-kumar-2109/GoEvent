@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import Loader from '../../components/loader/loader';
 import { useNavigate } from 'react-router-dom';
-import { ToastSuccess, ToastError } from '../../assets/toast';
+import { ToastSuccess, ToastError, ToastInfo } from '../../assets/toast';
 import './setup.css';
 import { createUser, sendOtp } from '../../api/postApiHandler/pstData';
 
-export default function Signup({ setIsUserLoggedIn }) {
+export default function Signup({ isUserLoggedIn, setIsUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -41,10 +41,12 @@ export default function Signup({ setIsUserLoggedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 200);
-    return () => clearTimeout(timer);
+    setIsLoading(true);
+    if (isUserLoggedIn) {
+      ToastInfo("You are already logged in");
+      navigate("/GoEvent");
+    }
+    setIsLoading(false);
   }, []);
 
   // Field validation functions

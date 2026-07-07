@@ -1,11 +1,13 @@
-const WEB_PATH = "http://192.168.1.18:3000";
+const WEB_PATH = "http://localhost:3000";
+// "http://192.168.1.18:3000";
 const MAIN_SUB_WEB_URL = "/GoEvent";
 
 const ROUTERS = {
     POST_ROUTE: {
         sendOtp: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/send-otp`,
         createUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/create-user`,
-        setUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/set-user`
+        setUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/set-user`,
+        createEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/create-event`
     },
     GET_ROUTE: {
         getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`,

@@ -53,10 +53,10 @@ const CreateUser = async (req, res) => {
         if (tokenData.status) {
             await Token.create({ userId: newUser._id, token: tokenData.token });
 
-            res.cookie("jwt", tokenData.token, {
+            res.cookie("GoEventJWT", tokenData.token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV,
-                sameSite: "strict",
+                secure: (process.env.NODE_ENV == "local") ? false : true,
+                sameSite: (process.env.NODE_ENV == "local") ? "lax" : "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             return res.status(201).json({ success: true, message: "User created successfully!", token: tokenData.token });
@@ -65,6 +65,7 @@ const CreateUser = async (req, res) => {
         }
 
     } catch (err) {
+        console.log("err => ", err);
         return res.status(500).json({ success: false, message: "Internal server error!", error: err.message });
     }
 }
@@ -94,11 +95,10 @@ const SetUser = async (req, res) => {
                 { token: tokenData.token },
                 { upsert: true, returnDocument: "after" }
             );
-
-            res.cookie("jwt", tokenData.token, {
+            res.cookie("goeventjwt", tokenData.token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV,
-                sameSite: "strict",
+                secure: (process.env.NODE_ENV === "local") ? false : true,
+                sameSite: (process.env.NODE_ENV === "local") ? "lax" : "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000
             });
             return res.status(200).json({
@@ -112,6 +112,7 @@ const SetUser = async (req, res) => {
             return res.status(500).json({ tag: "token", success: false, message: tokenData.message });
         }
     } catch (err) {
+        console.log("err => ", err);
         return res.status(500).json({ success: false, message: "Internal server error!" });
     }
 }
@@ -132,6 +133,7 @@ const UpdatePassword = async (req, res) => {
         });
 
     } catch (err) {
+        console.log("err => ", err);
         return res.status(500).json({ success: false, message: "Internal server error!" });
     }
 }
@@ -180,6 +182,7 @@ const SendEmailOTP = async (req, res) => {
         return res.status(200).json({ success: true, message: "OTP sent successfully!" });
 
     } catch (err) {
+        console.log("err => ", err);
         return res.status(500).json({ success: false, message: "Internal server error!" });
     }
 }

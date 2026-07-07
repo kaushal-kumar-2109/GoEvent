@@ -2,6 +2,8 @@ import { BrowserRouter } from "react-router-dom";
 import { ToastContainer, Bounce } from "react-toastify";
 
 import MainRouter from './routes/mainRoute';
+import NavBar from "./components/navBar/navBar";
+import Footer from "./components/footer/footer";
 
 function App() {
   return (

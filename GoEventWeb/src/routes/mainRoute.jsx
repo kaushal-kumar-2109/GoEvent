@@ -10,6 +10,9 @@ import ForgotPassword from "../pages/setupPage/forgot";
 import EventPage from "../pages/applicationPage/eventPage/eventPage";
 import AboutUs from "../pages/aboutUs/aboutUs";
 import ContactUs from "../pages/contactUs/contactUs";
+import TermsOfService from "../pages/termsOfService/termsOfService";
+import PrivacyPolicy from "../pages/privacyPolicy/privacyPolicy";
+import CookiePreferences from "../pages/cookiePreferences/cookiePreferences";
 import { CheckUserAuth } from "../middleware/chekUserAuth";
 
 import NotFound from "../pages/notFound/notFound";
@@ -34,11 +37,16 @@ const MainRouter = () => {
             <Route path="/" element={<Navigate to="/GoEvent" replace />} />
 
             <Route path="/GoEvent" element={<LandingPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
-            <Route path="/GoEvent/signup" element={<Signup setIsUserLoggedIn={setIsUserLoggedIn} />} />
-            <Route path="/GoEvent/forgot" element={<ForgotPassword />} />
-            <Route path="/GoEvent/login" element={<Login setIsUserLoggedIn={setIsUserLoggedIn} />} />
+
+            <Route path="/GoEvent/signup" element={<Signup isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/forgot" element={<ForgotPassword isUserLoggedIn={isUserLoggedIn} />} />
+            <Route path="/GoEvent/login" element={<Login isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+
             <Route path="/GoEvent/about" element={<AboutUs isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/contact" element={<ContactUs isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/terms" element={<TermsOfService isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/privacy" element={<PrivacyPolicy isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/cookies" element={<CookiePreferences isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
 
             <Route path="/GoEvent/events" element={<EventPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/event/:id" element={<EventDetailPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />

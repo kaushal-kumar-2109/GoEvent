@@ -56,7 +56,7 @@ export default function Footer() {
               <Link to="/GoEvent">Home</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#events" onClick={(e) => { e.preventDefault(); window.location.hash = 'events'; }}>Explore Events</a>
+              <Link to="/GoEvent/events">Explore Events</Link>
             </li>
             <li className="footer-link-item">
               <Link to="/GoEvent/about">About Us</Link>
@@ -72,16 +72,16 @@ export default function Footer() {
           <h4 className="footer-links-title">Categories</h4>
           <ul className="footer-links-list">
             <li className="footer-link-item">
-              <a href="#music" onClick={(e) => e.preventDefault()}>Music & Concerts</a>
+              <Link to="/GoEvent/events">Music & Concerts</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#tech" onClick={(e) => e.preventDefault()}>Tech Summits</a>
+              <Link to="/GoEvent/events">Tech Summits</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#sports" onClick={(e) => e.preventDefault()}>Sports & Fitness</a>
+              <Link to="/GoEvent/events">Sports & Fitness</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#food" onClick={(e) => e.preventDefault()}>Food & Drink</a>
+              <Link to="/GoEvent/events">Food & Drink</Link>
             </li>
           </ul>
         </div>
@@ -91,10 +91,10 @@ export default function Footer() {
           <h4 className="footer-links-title">Organizer & Support</h4>
           <ul className="footer-links-list">
             <li className="footer-link-item">
-              <a href="#guide" onClick={(e) => e.preventDefault()}>Organizer Guide</a>
+              <Link to="/GoEvent/contact">Organizer Guide</Link>
             </li>
             <li className="footer-link-item">
-              <a href="#help" onClick={(e) => e.preventDefault()}>Help Center</a>
+              <Link to="/GoEvent/contact">Help Center</Link>
             </li>
             <li className="footer-link-item">
               <Link to="/GoEvent/login">Host an Event</Link>
@@ -112,9 +112,9 @@ export default function Footer() {
           &copy; {new Date().getFullYear()} GoEvent Inc. All rights reserved.
         </div>
         <div className="footer-bottom-links">
-          <a href="#terms" onClick={(e) => e.preventDefault()} className="footer-bottom-link">Terms of Service</a>
-          <a href="#privacy" onClick={(e) => e.preventDefault()} className="footer-bottom-link">Privacy Policy</a>
-          <a href="#cookies" onClick={(e) => e.preventDefault()} className="footer-bottom-link">Cookie Preferences</a>
+          <Link to="/GoEvent/terms" className="footer-bottom-link">Terms of Service</Link>
+          <Link to="/GoEvent/privacy" className="footer-bottom-link">Privacy Policy</Link>
+          <Link to="/GoEvent/cookies" className="footer-bottom-link">Cookie Preferences</Link>
         </div>
       </div>
     </footer>

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import Loader from '../../components/loader/loader';
 import { useNavigate } from 'react-router-dom';
-import { ToastSuccess, ToastError } from '../../assets/toast';
+import { ToastSuccess, ToastError, ToastInfo } from '../../assets/toast';
 import { sendOtp, setUser } from '../../api/postApiHandler/pstData';
 import './setup.css';
 
-export default function Login({ setIsUserLoggedIn }) {
+export default function Login({ isUserLoggedIn, setIsUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -32,10 +32,12 @@ export default function Login({ setIsUserLoggedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 200);
-    return () => clearTimeout(timer);
+    setIsLoading(true);
+    if (isUserLoggedIn) {
+      ToastInfo("You are already logged in");
+      navigate("/GoEvent");
+    }
+    setIsLoading(false);
   }, []);
 
   // Email validation helper
@@ -115,6 +117,10 @@ export default function Login({ setIsUserLoggedIn }) {
     const emailErr = validateEmail(formData.email);
     const passErr = validatePassword(formData.password);
     const otpErr = isOtpSent ? validateOtp(formData.otp) : 'Please verify your email first';
+    if (!isOtpSent) {
+      ToastError("Please verify your email first");
+      return;
+    }
 
     setTouched({ email: true, password: true, otp: true });
     setErrors({ email: emailErr, password: passErr, otp: otpErr });

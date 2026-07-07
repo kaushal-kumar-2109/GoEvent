@@ -2,7 +2,8 @@ const PostDataCall = async (url, data) => {
     try {
         const response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', "auth": localStorage.getItem("GoEventUserData") },
+
             body: JSON.stringify(data)
         });
         const json = await response.json();
