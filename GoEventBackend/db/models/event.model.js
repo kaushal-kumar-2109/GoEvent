@@ -132,7 +132,8 @@ const EVENT = new mongoose.Schema({
             "pending",
             "published",
             "completed",
-            "cancelled"
+            "cancelled",
+            "deleted"
         ],
         default: "draft",
         index: true

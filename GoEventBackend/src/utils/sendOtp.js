@@ -45,7 +45,7 @@ const createMailOptions = (email, otp, tag) => {
             <div class="container">
                 <!-- Header / Branding -->
                 <div class="header">
-                    <h1>GoEvent</h1>
+                    <h1>GoEvent ${headingText}</h1>
                 </div>
                 
                 <!-- Main Body Content -->

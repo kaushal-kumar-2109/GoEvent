@@ -2,7 +2,7 @@ const Event = require("../../db/models/event.model.js");
 
 const GetLandingEvents = async (req, res) => {
     try {
-        const events = await Event.find().sort({ createdAt: -1 }).limit(10);
+        const events = await Event.find({ status: "published" }).sort({ createdAt: -1 }).limit(10);
         if (!events) return res.status(404).json({ data: false, message: "No Event found!" });
         return res.status(200).json({ data: events, message: "Event found sucessfully" });
     } catch (err) {
@@ -34,7 +34,7 @@ const GetEventById = async (req, res) => {
 const GetAllEvents = async (req, res) => {
     try {
         const { page = 1, limit = 20, category, date, search } = req.query;
-        const query = {};
+        const query = { status: "published" };
 
         // Filter by Category
         if (category && category !== "all") {
