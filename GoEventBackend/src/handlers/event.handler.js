@@ -129,7 +129,7 @@ const CreateEvent = async (req, res) => {
         }
 
         const newEvent = new Event({
-            title, shortDescription, description, category, organizer: req.user._id, organizerName: req.user.name, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, availableSeats, contactEmail, contactPhone,
+            title, shortDescription, description, category, organizer: req.user._id, organizerName: req.user.name, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, registrationCount: availableSeats, contactEmail, contactPhone,
             venueName, address, city, state, country, pincode, googleMapsLink,
             meetingLink, meetingPassword,
             thumbnailImage, promotionalVideo, website, socialLinks, speakers, faqs, refundPolicy, termsAndConditions

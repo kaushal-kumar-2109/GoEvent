@@ -61,23 +61,18 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
   const [hostedEvents, setHostedEvents] = useState([]);
 
   const GetUserData = async () => {
-    let userProfileData = localStorage.getItem("UserProfileData");
-    let data = JSON.parse(userProfileData);
 
-    if (!data || data.length === 0) {
-      const response = await getUserProfile();
-      ToastSuccess(response.data.message);
+    const response = await getUserProfile();
+    ToastSuccess(response.data.message);
 
-      if (!response.flag) return;
+    if (!response.flag) return;
 
-      data = {
-        userData: response.data.userData,
-        createdEvents: response.data.createdEvents,
-        notificationsSettings: notifications,
-      };
-      localStorage.setItem("UserProfileData", JSON.stringify(data));
-    }
-
+    const data = {
+      userData: response.data.userData,
+      createdEvents: response.data.createdEvents,
+      notificationsSettings: notifications,
+    };
+    console.log(data);
     setProfileData((prev) => ({
       ...prev,
       name: data.userData.name,
@@ -538,11 +533,25 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                       </thead>
                       <tbody>
                         {hostedEvents.map((evt) => (
-                          <tr key={evt.id}>
+                          <tr key={evt._id}>
                             <td data-label="Event Details">
                               <div className="hosted-event-title-cell">
-                                <span className="hosted-event-title" onClick={() => navigate(`/GoEvent/event/${evt.id}`)} title="View Event Page">{evt.title}</span>
-                                <span className="hosted-event-date">{evt.date}</span>
+                                <span className="hosted-event-title" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">{evt.title}</span>
+                                <span className="hosted-event-date">
+                                  {new Date(evt.startDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </span>
+                                <span className="slash" style={{ marginLeft: "20px" }}> to </span>
+                                <span className="hosted-event-date">
+                                  {new Date(evt.endDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </span>
                               </div>
                             </td>
                             <td className="hosted-category-cell" data-label="Category">
@@ -556,34 +565,37 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                             <td data-label="Registrations">
                               <div className="registration-progress-container">
                                 <div className="registration-progress-text">
-                                  <strong>{evt.registrations}</strong><span className="slash">/</span><span className="seats-total">{evt.seats}</span>
-                                  <span className="progress-percent"> ({Math.round((evt.registrations / evt.seats) * 100)}%)</span>
+                                  <strong>{new Date(evt.registrationDeadline).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: "short",
+                                    day: 'numeric'
+                                  })}</strong>
+                                  <span className="slash">/</span>
+                                  <span className="seats-total">{evt.registrationCount}</span>
+                                  <span className="progress-percent"> ({Math.round((evt.seatsFilled / evt.registrationCount) * 100)}%)</span>
                                 </div>
                                 <div className="registration-progress-bar-bg">
                                   <div
                                     className="registration-progress-bar-fill"
-                                    style={{ width: `${Math.min((evt.registrations / evt.seats) * 100, 100)}%` }}
+                                    style={{ width: `${Math.min((evt.seatsFilled / evt.registrationCount) * 100, 100)}%` }}
                                   ></div>
                                 </div>
                               </div>
                             </td>
                             <td data-label="Pricing">
                               <span className="hosted-price-tag">
-                                {evt.price === 0 ? "FREE" : `₹${evt.price}`}
+                                {evt.price === 0 ? "FREE" : `₹${evt.ticketPrice}`}
                               </span>
                             </td>
                             <td className="table-actions-cell" data-label="Actions">
-                              <button className="table-action-icon-btn" onClick={() => navigate(`/GoEvent/event/${evt.id}`)} title="View Event Page">
+                              <button className="table-action-icon-btn" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                                 </svg>
                               </button>
-                              <button className="table-action-icon-btn delete" onClick={() => {
-                                setHostedEvents((prev) => prev.filter((e) => e.id !== evt.id));
-                                ToastSuccess("Hosted event deleted successfully.");
-                              }} title="Delete Event">
+                              <button className="table-action-icon-btn delete" onClick={() => handleEdit(evt)} title="Edit Event">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                                 </svg>
                               </button>
                             </td>

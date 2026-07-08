@@ -76,6 +76,14 @@ const EVENT = new mongoose.Schema({
         default: 0
     },
     availableSeats: Number,
+    seatsFilled: {
+        type: Number,
+        defalt: 0
+    },
+    registrationCount: {
+        type: Number,
+        default: 0
+    },
     // Contact
     contactEmail: String,
     contactPhone: String,
@@ -120,10 +128,6 @@ const EVENT = new mongoose.Schema({
             comment: String
         }
     ],
-    registrationCount: {
-        type: Number,
-        default: 0
-    },
     // Status
     status: {
         type: String,
@@ -137,6 +141,18 @@ const EVENT = new mongoose.Schema({
         ],
         default: "draft",
         index: true
+    },
+    paymentQr: {
+        type: String,
+        default: ""
+    },
+    paymentUPI: {
+        type: String,
+        default: ""
+    },
+    paymentUPTName: {
+        type: String,
+        default: ""
     },
     // other 
     createdAt: {

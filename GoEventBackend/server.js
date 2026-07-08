@@ -3,8 +3,13 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+
 // ------------------------- import connect function ------------------------- //
 require("./db/connect.js");
+
+// ------------------------- Cloudinary connection function ------------------------- //
+const { cloudynaryConfig, uploadFile } = require("./cloudynary/cloudynary.js");
+cloudynaryConfig();
 
 // ------------------------- import router files ------------------------- //
 const getRouter = require("./src/routes/get.router.js");

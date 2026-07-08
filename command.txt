@@ -1,6 +1,6 @@
 # backend command used (GoEventBackend)
     => npm inti
-    => npm i bcrypt cors crypto dotenv express mongoose @faker-js/faker jsonwebtoken uuid nodemailer
+    => npm i bcrypt cors crypto dotenv express mongoose @faker-js/faker jsonwebtoken uuid nodemailer cloudinary
     => npm i --save-dev nodemon
     => npm run seed
 

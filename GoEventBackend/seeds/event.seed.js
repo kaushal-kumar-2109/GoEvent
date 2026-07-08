@@ -75,7 +75,7 @@ async function seedEvents() {
 
             // 2. Schedule the event to start 7 to 30 days after its creation date
             const startDate = new Date(
-                createdAt.getTime() + 
+                createdAt.getTime() +
                 faker.number.int({ min: 7, max: 30 }) * 24 * 60 * 60 * 1000
             );
 
@@ -124,6 +124,9 @@ async function seedEvents() {
                 });
             }
 
+            let totalSeatCounter = faker.number.int({ min: 20, max: 2000 });
+            let registrationCounter = faker.number.int({ min: 0, max: totalSeatCounter });
+
             events.push({
                 title: faker.company.catchPhrase(),
                 shortDescription: faker.lorem.sentence(),
@@ -149,7 +152,7 @@ async function seedEvents() {
                 googleMapsLink: "https://maps.google.com",
                 meetingLink: faker.internet.url(),
                 meetingPassword: faker.internet.password(),
-                
+
                 // Injected time logical fields
                 createdAt,
                 updatedAt,
@@ -158,7 +161,6 @@ async function seedEvents() {
                 registrationDeadline,
 
                 ticketPrice: faker.number.int({ min: 0, max: 5000 }),
-                availableSeats: faker.number.int({ min: 20, max: 1000 }),
                 contactEmail: faker.internet.email(),
                 contactPhone: `9${faker.number.int({ min: 100000000, max: 999999999 })}`,
                 website: faker.internet.url(),
@@ -175,8 +177,10 @@ async function seedEvents() {
                 termsAndConditions: faker.lorem.paragraph(),
                 likes: faker.number.int({ min: 0, max: 1000 }),
                 comments,
-                registrationCount: faker.number.int({ min: 0, max: 500 }),
-                status: randomItem(statuses)
+                availableSeats: totalSeatCounter - registrationCounter,
+                registrationCount: totalSeatCounter,
+                seatsFilled: registrationCounter,
+                status: (endDate <= new Date()) ? "completed" : randomItem(statuses)
             });
         }
 
