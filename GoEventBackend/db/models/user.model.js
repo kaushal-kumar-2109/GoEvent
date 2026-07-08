@@ -36,6 +36,10 @@ const USER = new mongoose.Schema({
         enum: ["ACTIVE", "INACTIVE", "DELETED", "LOCKED"],
         default: "ACTIVE"
     },
+    bio: {
+        type: String,
+        default: ""
+    },
     createdAt: {
         type: Date,
         default: Date.now

@@ -20,4 +20,8 @@ const getEvents = async (params = {}) => {
     return await GetDataCall(`${ROUTERS.GET_ROUTE.getEvents}?${queryString}`);
 };
 
-export { getLandData, getEventById, getEvents };
+const getUserProfile = async () => {
+    return await GetDataCall(ROUTERS.GET_ROUTE.getUserProfileData);
+}
+
+export { getLandData, getEventById, getEvents, getUserProfile };

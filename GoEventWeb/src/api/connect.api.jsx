@@ -12,7 +12,8 @@ const ROUTERS = {
     GET_ROUTE: {
         getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`,
         getEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-event`,
-        getEvents: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-events`
+        getEvents: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-events`,
+        getUserProfileData: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-user-profile-data`
     },
     PUT_ROUTE: {
         updatePassword: `${WEB_PATH}${MAIN_SUB_WEB_URL}/put/change-password`

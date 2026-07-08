@@ -19,12 +19,16 @@ const AVATAR_OPTIONS = [
 ];
 
 export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
-
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('profile'); // profile | bookings | hosted | security | notifications
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  // Selected ticket for modal details
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [ticketToCancel, setTicketToCancel] = useState(null);
+
   // Profile data synchronized with local storage
   const [profileData, setProfileData] = useState({
     name: 'User',
@@ -34,6 +38,17 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     bio: 'Avid event planner and technology enthusiast. Passionate about bringing communities together.',
     avatar: AVATAR_OPTIONS[0]
   });
+
+  // Security Form
+  const [securityData, setSecurityData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+    otp: ''
+  });
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
   // Notification states
   const [notifications, setNotifications] = useState({
     bookingConfirm: true,
@@ -41,6 +56,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     newsletters: true,
     securityAlerts: true
   });
+
   // Mock Booked Tickets
   const [ticketsList, setTicketsList] = useState([
     {
@@ -55,10 +71,87 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
       status: "active",
       banner: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
       qrData: "sunburn-goa-2026-tkt-884920"
+    },
+    {
+      id: "TKT-493012",
+      eventTitle: "National Startup Summit 2026",
+      date: "Jul 15, 2026",
+      time: "09:30 AM - 05:30 PM",
+      location: "Science City Auditorium, Bangalore",
+      organizer: "Indian Business Network",
+      price: 499,
+      quantity: 1,
+      status: "active",
+      banner: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80",
+      qrData: "startup-summit-2026-tkt-493012"
+    },
+    {
+      id: "TKT-108472",
+      eventTitle: "Culinary Masterclass & Wine Tasting",
+      date: "Jun 20, 2026",
+      time: "06:00 PM - 09:00 PM",
+      location: "The Oberoi Grand, Mumbai",
+      organizer: "Gourmet Society",
+      price: 1800,
+      quantity: 1,
+      status: "completed",
+      banner: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80",
+      qrData: "culinary-masterclass-2026-tkt-108472"
+    },
+    {
+      id: "TKT-993801",
+      eventTitle: "Introduction to Generative AI",
+      date: "May 10, 2026",
+      time: "07:00 PM - 08:30 PM",
+      location: "Zoom Online Meeting",
+      organizer: "TechEd Workshops",
+      price: 0,
+      quantity: 1,
+      status: "cancelled",
+      banner: "https://images.unsplash.com/photo-1591453089816-0fbb971b454c?auto=format&fit=crop&w=600&q=80",
+      qrData: "genai-intro-2026-tkt-993801"
     }
   ]);
+
   // Mock Hosted Events
-  const [hostedEvents, setHostedEvents] = useState([]);
+  const [hostedEvents, setHostedEvents] = useState([
+    {
+      id: "EVT-772910",
+      title: "React 19 & Next.js 15 Deep Dive Workshop",
+      date: "Aug 02, 2026",
+      category: "Technology",
+      price: 299,
+      status: "published",
+      registrations: 45,
+      seats: 100
+    },
+    {
+      id: "EVT-493021",
+      title: "Corporate Finance & Pitching Seminar",
+      date: "Sep 18, 2026",
+      category: "Business",
+      price: 0,
+      status: "draft",
+      registrations: 0,
+      seats: 50
+    },
+    {
+      id: "EVT-102948",
+      title: "Sunset Jazz & Blues Night",
+      date: "Jun 12, 2026",
+      category: "Music",
+      price: 599,
+      status: "completed",
+      registrations: 120,
+      seats: 120
+    }
+  ]);
+
+  // Mock Active sessions
+  const [sessions, setSessions] = useState([
+    { id: 1, device: "Windows Desktop", browser: "Chrome", location: "Mumbai, India", current: true },
+    { id: 2, device: "Apple iPhone 14", browser: "Safari", location: "Pune, India", current: false }
+  ]);
 
   const GetUserData = async () => {
     let userProfileData = localStorage.getItem("UserProfileData");
@@ -72,8 +165,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
 
       data = {
         userData: response.data.userData,
-        createdEvents: response.data.createdEvents,
-        notificationsSettings: notifications,
+        createdEvents: response.data.createdEvents
       };
       localStorage.setItem("UserProfileData", JSON.stringify(data));
     }
@@ -84,12 +176,8 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
       email: data.userData.email,
       phone: data.userData.phone,
       avatar: data.userData.avatar || AVATAR_OPTIONS[0],
-      bio: data.userData.bio || 'Avid event planner and technology enthusiast. Passionate about bringing communities together.',
       organisation: data.userData.organisation
     }));
-    setNotifications(() => (prev) => ({ ...prev, ...data.notificationsSettings }));
-    setHostedEvents(data.createdEvents);
-
   };
 
   // Load user data on mount
@@ -105,71 +193,42 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     setIsLoading(false);
   }, [navigate]);
 
-  // Save profile changes (saves back to localStorage active session)
-  const saveProfile = (e) => {
-    e.preventDefault();
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Selected ticket for modal details
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [ticketToCancel, setTicketToCancel] = useState(null);
-
-  // Security Form
-  const [securityData, setSecurityData] = useState({
-    newPassword: '',
-    confirmPassword: '',
-    otp: ''
-  });
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [passwordLoading, setPasswordLoading] = useState(false);
-
-  // Mock Active sessions
-  const [sessions, setSessions] = useState([
-    { id: 1, device: "Windows Desktop", browser: "Chrome", location: "Mumbai, India", current: true },
-    { id: 2, device: "Apple iPhone 14", browser: "Safari", location: "Pune, India", current: false }
-  ]);
-
   // Handle inputs for profile form
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Save profile changes (saves back to localStorage active session)
+  const saveProfile = (e) => {
+    e.preventDefault();
+    if (!profileData.name.trim()) {
+      ToastWarning("Name field cannot be left blank.");
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      const userDataStr = localStorage.getItem("GoEventUserData");
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        const updatedUser = {
+          ...userData,
+          name: profileData.name,
+          avatar: profileData.avatar,
+          organisation: profileData.organisation
+        };
+        localStorage.setItem("GoEventUserData", JSON.stringify(updatedUser));
+      }
+
+      ToastSuccess("Profile details updated successfully!");
+      setIsLoading(false);
+
+      // Forces re-render of App states if needed
+      if (setIsUserLoggedIn) {
+        setIsUserLoggedIn(true);
+      }
+    }, 600);
   };
 
   // Revoke session handler

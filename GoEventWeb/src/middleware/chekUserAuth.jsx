@@ -17,6 +17,7 @@ const CheckUserAuth = () => {
 
 const RemoveUserAuth = () => {
     localStorage.removeItem("GoEventUserData");
+    localStorage.removeItem("UserProfileData")
 }
 
 export { CheckUserAuth, RemoveUserAuth };

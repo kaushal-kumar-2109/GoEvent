@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const User = require("../../db/models/user.model.js");
 const Otp = require("../../db/models/otp.model.js");
 const Token = require("../../db/models/token.model.js");
+const Event = require("../../db/models/event.model.js");
 
 const CreateUserToken = require("../utils/createToken.js");
 const SendEmail = require("../utils/sendOtp.js");
@@ -183,4 +184,24 @@ const SendEmailOTP = async (req, res) => {
     }
 }
 
-module.exports = { CreateUser, SetUser, SendEmailOTP, UpdatePassword };
+const GetUserProfileData = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) return res.status(401).json({ success: false, message: "User not found!" });
+
+        const createdEvent = await Event.find({ organizer: user._id });
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully!",
+            userData: user,
+            createdEvents: createdEvent
+        });
+
+    } catch (err) {
+        console.log("err => ", err);
+        return res.status(500).json({ success: false, message: "Internal server error!" });
+    }
+}
+
+module.exports = { CreateUser, SetUser, SendEmailOTP, UpdatePassword, GetUserProfileData };
