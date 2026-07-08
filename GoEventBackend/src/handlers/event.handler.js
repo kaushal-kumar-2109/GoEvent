@@ -131,7 +131,7 @@ const CreateEvent = async (req, res) => {
         const newEvent = new Event({
             title, shortDescription, description, category, organizer: req.user._id, organizerName: req.user.name, bannerImage, eventMode, startDate, endDate, registrationDeadline, ticketPrice, registrationCount: availableSeats, contactEmail, contactPhone,
             venueName, address, city, state, country, pincode, googleMapsLink,
-            meetingLink, meetingPassword,
+            meetingLink, meetingPassword, availableSeats, seatsFilled: 0,
             thumbnailImage, promotionalVideo, website, socialLinks, speakers, faqs, refundPolicy, termsAndConditions
         });
         await newEvent.save();
@@ -146,4 +146,22 @@ const CreateEvent = async (req, res) => {
     }
 };
 
-module.exports = { GetLandingEvents, GetEventById, GetAllEvents, CreateEvent };
+const updateEventData = async (req, res) => {
+    try {
+        const eventData = await Event.findById({ _id: req.body._id });
+        if (!req.user._id.equals(eventData.organizer)) return res.status(400).json({ success: false, message: "You are not authorized to update this event!" });
+        if (req.user.lockedUntil != null) return res.status(400).json({ success: false, message: "You are temporarily blocked from updating events!" });
+
+        const updatedEvent = await Event.findOneAndUpdate({ _id: req.body._id }, { ...req.body, updatedBy: req.user._id });
+        return res.status(200).json({ success: true, message: "Event updated successfully", data: updatedEvent });
+    } catch (err) {
+        console.log("err => ", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!",
+            error: err.message || err
+        })
+    }
+}
+
+module.exports = { GetLandingEvents, GetEventById, GetAllEvents, CreateEvent, updateEventData };

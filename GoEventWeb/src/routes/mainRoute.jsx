@@ -18,6 +18,7 @@ import { CheckUserAuth } from "../middleware/chekUserAuth";
 import NotFound from "../pages/notFound/notFound";
 import EventCreate from "../pages/applicationPage/eventCreate/eventCreate";
 import UserProfile from "../pages/applicationPage/userProfile/userProfile";
+import { UpdateEvent } from "../pages/applicationPage/updateEventPage/updateEvent";
 
 const MainRouter = () => {
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
@@ -50,6 +51,7 @@ const MainRouter = () => {
 
             <Route path="/GoEvent/events" element={<EventPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/event/:id" element={<EventDetailPage isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+            <Route path="/GoEvent/:uid/update/:eid" element={<UpdateEvent isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/event/create-event" element={<EventCreate isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             <Route path="/GoEvent/profile" element={<UserProfile isUserLoggedIn={isUserLoggedIn} setIsUserLoggedIn={setIsUserLoggedIn} />} />
 

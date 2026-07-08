@@ -80,7 +80,8 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
       phone: data.userData.phone,
       avatar: data.userData.avatar || AVATAR_OPTIONS[0],
       bio: data.userData.bio || 'Avid event planner and technology enthusiast. Passionate about bringing communities together.',
-      organisation: data.userData.organisation
+      organisation: data.userData.organisation,
+      _id: data.userData._id
     }));
     setNotifications(() => (prev) => ({ ...prev, ...data.notificationsSettings }));
     setHostedEvents(data.createdEvents);
@@ -513,9 +514,17 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
             {/* TAB 3: MY HOSTED EVENTS */}
             {activeTab === 'hosted' && (
               <div className="tab-pane">
-                <div className="tab-header">
-                  <h2 className="tab-title">My Hosted Workshops</h2>
-                  <p className="tab-desc">Track statistics, view publishing statuses, and manage registrations for your hosted events.</p>
+                <div className="tab-header hosted-header-row">
+                  <div>
+                    <h2 className="tab-title">My Hosted Workshops</h2>
+                    <p className="tab-desc">Track statistics, view publishing statuses, and manage registrations for your hosted events.</p>
+                  </div>
+                  <button className="create-event-cta-btn" onClick={() => navigate('/GoEvent/event/create-event')}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Create Event
+                  </button>
                 </div>
 
                 {hostedEvents.length > 0 ? (
@@ -593,7 +602,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
                                 </svg>
                               </button>
-                              <button className="table-action-icon-btn delete" onClick={() => handleEdit(evt)} title="Edit Event">
+                              <button className="table-action-icon-btn delete" onClick={() => navigate(`/GoEvent/${profileData._id}/update/${evt._id}`)} title="Edit Event">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                   <path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                                 </svg>
@@ -605,8 +614,21 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                     </table>
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#64748b' }}>
-                    <p>No hosted events found. Click "Create Event" to start hosting!</p>
+                  <div className="hosted-empty-state">
+                    <div className="empty-state-icon">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </div>
+                    <p className="empty-state-text">No hosted workshops found. Start hosting your own events today!</p>
+                    <button className="create-event-cta-btn" onClick={() => navigate('/GoEvent/event/create-event')}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Create Event
+                    </button>
                   </div>
                 )}
               </div>

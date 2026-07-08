@@ -16,7 +16,8 @@ const ROUTERS = {
         getUserProfileData: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-user-profile-data`
     },
     PUT_ROUTE: {
-        updatePassword: `${WEB_PATH}${MAIN_SUB_WEB_URL}/put/change-password`
+        updatePassword: `${WEB_PATH}${MAIN_SUB_WEB_URL}/put/change-password`,
+        updateEventData: `${WEB_PATH}${MAIN_SUB_WEB_URL}/put/update-event`
     }
 };
 

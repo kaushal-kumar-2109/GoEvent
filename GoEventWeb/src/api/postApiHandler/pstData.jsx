@@ -1,4 +1,3 @@
-import { Router } from "react-router-dom";
 import ROUTERS from "../connect.api";
 import PostDataCall from "./requester/request";
 
@@ -22,4 +21,8 @@ const createEvent = async (data) => {
     return await PostDataCall(ROUTERS.POST_ROUTE.createEvent, data);
 }
 
-export { sendOtp, createUser, setUser, updateUserPassword, createEvent };
+const updateEventData = async (data) => {
+    return await PostDataCall(ROUTERS.PUT_ROUTE.updateEventData, data);
+}
+
+export { sendOtp, createUser, setUser, updateUserPassword, createEvent, updateEventData };
