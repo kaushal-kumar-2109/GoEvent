@@ -90,7 +90,7 @@
   position: absolute;
   inset: 0;
   background-image: radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+    radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
 }
 
 .profile-banner-overlay {
@@ -346,7 +346,8 @@
   width: 100%;
 }
 
-.profile-field-input, .profile-field-textarea {
+.profile-field-input,
+.profile-field-textarea {
   background: rgba(7, 8, 14, 0.55);
   border: 1px solid var(--border-color);
   border-radius: 14px;
@@ -385,7 +386,8 @@
   transform: scale(1.05);
 }
 
-.profile-field-input:focus, .profile-field-textarea:focus {
+.profile-field-input:focus,
+.profile-field-textarea:focus {
   outline: none;
   border-color: var(--accent-indigo);
   background: rgba(7, 8, 14, 0.8);
@@ -550,7 +552,8 @@
   background-color: var(--bg-primary);
   border-radius: 50%;
   z-index: 5;
-  bottom: 40px; /* Aligns exactly with the ticket-footer divider */
+  bottom: 40px;
+  /* Aligns exactly with the ticket-footer divider */
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
@@ -673,7 +676,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px dashed rgba(255, 255, 255, 0.12); /* Mimics Perforation */
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  /* Mimics Perforation */
   padding-top: 0.95rem;
   margin-top: auto;
   font-size: 0.75rem;
@@ -833,13 +837,15 @@
   position: relative;
 }
 
-.ticket-voucher-divider::before, .ticket-voucher-divider::after {
+.ticket-voucher-divider::before,
+.ticket-voucher-divider::after {
   content: '';
   position: absolute;
   top: -11px;
   width: 22px;
   height: 22px;
-  background: rgba(5, 6, 12, 0.9); /* Blend with backdrop */
+  background: rgba(5, 6, 12, 0.9);
+  /* Blend with backdrop */
   border-radius: 50%;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
   z-index: 5;
@@ -1023,7 +1029,11 @@
 /* HOSTED WORKSHOPS TABLE SECTION */
 .hosted-table-wrapper {
   width: 100%;
+  height: 350px;
   overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   border-radius: 18px;
   background: rgba(7, 8, 14, 0.4);
   border: 1px solid var(--border-color);
@@ -1105,15 +1115,15 @@
   border-color: rgba(168, 85, 247, 0.2);
 }
 
-.hosted-category-cell span.technology, 
-.hosted-category-cell span.coding, 
+.hosted-category-cell span.technology,
+.hosted-category-cell span.coding,
 .hosted-category-cell span.business {
   background: rgba(99, 102, 241, 0.1);
   color: #818cf8;
   border-color: rgba(99, 102, 241, 0.2);
 }
 
-.hosted-category-cell span.sports, 
+.hosted-category-cell span.sports,
 .hosted-category-cell span.health {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
@@ -1499,11 +1509,11 @@
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background: var(--accent-gradient);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(20px);
   background-color: var(--text-primary);
 }
@@ -1514,6 +1524,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1525,6 +1536,7 @@
     opacity: 0;
     transform: scale(0.94);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -1532,8 +1544,13 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* MOBILE TABS HEADER */
@@ -1569,7 +1586,8 @@
   }
 
   .profile-sidebar {
-    display: none; /* Desktop sidebar hidden, replace with mobile tabs */
+    display: none;
+    /* Desktop sidebar hidden, replace with mobile tabs */
   }
 
   .profile-content {
@@ -1584,8 +1602,10 @@
     overflow-x: auto;
     padding: 0.25rem 0.15rem 0.85rem 0.15rem;
     margin-bottom: 1.5rem;
-    scrollbar-width: none; /* Hide scrollbar Firefox */
-    -ms-overflow-style: none; /* Hide scrollbar IE/Edge */
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+    -ms-overflow-style: none;
+    /* Hide scrollbar IE/Edge */
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     width: 100%;
     box-sizing: border-box;
@@ -1593,7 +1613,8 @@
   }
 
   .mobile-tabs-container::-webkit-scrollbar {
-    display: none; /* Hide scrollbar Chrome/Safari */
+    display: none;
+    /* Hide scrollbar Chrome/Safari */
   }
 
   .mobile-tab-btn {
@@ -1669,7 +1690,8 @@
     gap: 0.75rem;
   }
 
-  .save-changes-btn, .cancel-changes-btn {
+  .save-changes-btn,
+  .cancel-changes-btn {
     width: 100%;
     box-sizing: border-box;
     text-align: center;
@@ -1687,11 +1709,11 @@
     box-shadow: none;
   }
 
-  .hosted-table, 
-  .hosted-table thead, 
-  .hosted-table tbody, 
-  .hosted-table th, 
-  .hosted-table td, 
+  .hosted-table,
+  .hosted-table thead,
+  .hosted-table tbody,
+  .hosted-table th,
+  .hosted-table td,
   .hosted-table tr {
     display: block;
   }
@@ -1850,3 +1872,78 @@
   line-height: 1.5;
 }
 
+/* SUB-MENU STYLES */
+.profile-menu-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1.5rem;
+  margin-top: 0.25rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.profile-menu-sub-item {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.profile-menu-sub-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+  padding-left: 0.95rem;
+}
+
+.profile-menu-sub-item.active {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+/* HORIZONTAL FILTER BAR STYLES */
+.hosted-filters-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar IE/Edge */
+}
+
+.hosted-filters-bar::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.filter-badge {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  padding: 0.4rem 1rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-badge:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-badge.active {
+  background: var(--accent-indigo);
+  color: var(--text-primary);
+  border-color: var(--accent-indigo);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}

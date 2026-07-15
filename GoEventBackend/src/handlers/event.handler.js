@@ -34,6 +34,10 @@ const GetEventById = async (req, res) => {
 
 const GetAllEvents = async (req, res) => {
     try {
+        await Event.updateMany({ registrationDeadline: { $lt: new Date() } }, { status: "pending" });
+        await Event.updateMany({ endDate: { $lt: new Date() } }, { status: "completed" });
+        await Event.updateMany({ startDate: { $lt: new Date() } }, { status: "started" });
+
         const { page = 1, limit = 20, category, date, search } = req.query;
         const query = { status: "published" };
 
@@ -179,7 +183,33 @@ const updateEventData = async (req, res) => {
 
 const BookEvent = async (req, res) => {
     try {
-        return res.status(400).json({ sucess: false, message: "not created " });
+        const { eventId, userId, seats, transectionName, transectionId } = req.body;
+
+        const eventData = await Event.findOne({ _id: eventId });
+
+        if (eventData.registrationDeadline < new Date()) {
+            await eventData.updateOne({ status: "pending" });
+            if (eventData.startDate <= new Date()) {
+                await eventData.updateOne({ status: "started" });
+            }
+            if (eventData.endDate <= new Date()) {
+                await eventData.updateOne({ status: "completed" });
+            }
+            return res.status(400).json({ success: false, message: "Registration DeadlinePassed!" });
+        }
+
+        if (!eventData) return res.status(404).json({ success: false, message: "Event not found!" });
+        if (eventData.status != "published") return res.status(400).json({ success: false, message: "Event not Published!" });
+        if (userId.toString() !== req.user._id.toString()) return res.status(401).json({ success: false, message: "User not match!" });
+        if (!seats) return res.status(400).json({ success: false, tag: "seats", message: "Seats required" });
+        if (seats > eventData.availableSeats) return res.status(400).json({ success: false, tag: "seats", message: "Seats not available!" });
+        if (!transectionName) return res.status(400).json({ success: false, tag: "transectionName", message: "Transection Name required" });
+        if (!transectionId) return res.status(400).json({ success: false, tag: "transectionId", message: "Transection Id required" });
+
+        await Booking.create(req.body);
+        await eventData.updateOne({ availableSeats: eventData.availableSeats - seats, seatsFilled: eventData.seatsFilled + seats });
+
+        return res.status(200).json({ success: true, message: "Event booked successfully" });
     } catch (err) {
         console.log("err => ", err);
         return res.status(500).json({

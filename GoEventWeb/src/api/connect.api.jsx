@@ -6,7 +6,8 @@ const ROUTERS = {
         sendOtp: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/send-otp`,
         createUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/create-user`,
         setUser: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/set-user`,
-        createEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/create-event`
+        createEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/create-event`,
+        bookEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/post/book-event`
     },
     GET_ROUTE: {
         getLandEvent: `${WEB_PATH}${MAIN_SUB_WEB_URL}/get/get-land-events`,

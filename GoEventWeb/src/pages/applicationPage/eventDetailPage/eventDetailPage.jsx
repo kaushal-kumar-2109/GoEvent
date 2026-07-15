@@ -5,7 +5,7 @@ import NavBar from '../../../components/navBar/navBar';
 import SideBar from '../../../components/sideBar/sideBar';
 import Footer from '../../../components/footer/footer';
 import Loader from '../../../components/loader/loader';
-import { getEventById } from '../../../api/getApiHandler/getData';
+import { getEventById, getUserProfile } from '../../../api/getApiHandler/getData';
 import { ToastMessage, ToastSuccess } from '../../../assets/toast.jsx';
 import { useNavigate } from 'react-router-dom';
 import './eventDetailPage.css';
@@ -16,6 +16,7 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [eventData, setEventData] = useState(null);
+  const [uid, setUid] = useState(null);
 
   // Interactive page states
   const [activeFaqIndex, setActiveFaqIndex] = useState(null);
@@ -53,28 +54,35 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
         setLikesCount(data.likes || 0);
         setCommentsList(data.comments || []);
       } else {
-        console.warn("API fetched failed or returned no data, falling back to mock details.");
-        setEventData(MOCK_EVENT);
-        setLikesCount(MOCK_EVENT.likes);
-        setCommentsList(MOCK_EVENT.comments);
-        ToastMessage("Using demo event info");
+        console.warn("API fetch failed or returned no data");
+        ToastMessage("Failed to load event details.");
+        setEventData(null);
       }
       setIsLoading(false);
     } catch (err) {
       console.error("Error loading event: ", err);
-      if (active) {
-        setEventData(MOCK_EVENT);
-        setLikesCount(MOCK_EVENT.likes);
-        setCommentsList(MOCK_EVENT.comments);
-        setIsLoading(false);
+      ToastMessage("Error loading event details.");
+      setIsLoading(false);
+    }
+  };
+
+  const fetchUser = async () => {
+    try {
+      const res = await getUserProfile();
+      if (res && res.flag && res.data && res.data.userData) {
+        setUid(res.data.userData._id);
       }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
     }
   };
 
   useEffect(() => {
     CheckAuth();
     loadEvent();
+    fetchUser();
   }, []);
+
 
   const handleLikeToggle = () => {
     if (isLiked) {
@@ -509,7 +517,7 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
                   </div>
                   <div className="info-item-details">
                     <span className="info-item-label">Venue</span>
-                    <span className="info-item-value">{venueName || "Jacobi Inc"}</span>
+                    <span className="info-item-value">{venueName || "Venue not specified"}</span>
                     <span className="info-item-subvalue">{address}</span>
                     <span className="info-item-subvalue">{city}, {state}, {pincode}</span>
                     {googleMapsLink && (
@@ -543,7 +551,28 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
               </div>
 
               {/* Main Actions */}
-              <button className="btn-primary-action" onClick={() => alert("Redirecting to event seat booking...")}>
+              <button 
+                className="btn-primary-action" 
+                onClick={async () => {
+                  if (!uid) {
+                    try {
+                      const res = await getUserProfile();
+                      if (res && res.flag && res.data && res.data.userData) {
+                        const fetchedUid = res.data.userData._id;
+                        navigate(`/GoEvent/${fetchedUid}/booking/${id}`);
+                      } else {
+                        ToastMessage("Please log in to book tickets.");
+                        navigate("/GoEvent/login");
+                      }
+                    } catch (err) {
+                      ToastMessage("Please log in to book tickets.");
+                      navigate("/GoEvent/login");
+                    }
+                  } else {
+                    navigate(`/GoEvent/${uid}/booking/${id}`);
+                  }
+                }}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
                 </svg>

@@ -75,15 +75,15 @@ const EVENT = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    availableSeats: {
+    availableSeats: { // number of seats left
         type: Number,
         default: 0
     },
-    seatsFilled: {
+    seatsFilled: {  // number of booking count
         type: Number,
         defalt: 0
     },
-    registrationCount: {
+    registrationCount: { // total number of seates
         type: Number,
         default: 0
     },
@@ -136,8 +136,9 @@ const EVENT = new mongoose.Schema({
         type: String,
         enum: [
             "draft",
-            "pending",
             "published",
+            "pending",
+            "started",
             "completed",
             "cancelled",
             "deleted"

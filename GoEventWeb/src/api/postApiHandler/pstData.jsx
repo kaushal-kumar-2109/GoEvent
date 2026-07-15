@@ -25,4 +25,8 @@ const updateEventData = async (data) => {
     return await PostDataCall(ROUTERS.PUT_ROUTE.updateEventData, data);
 }
 
-export { sendOtp, createUser, setUser, updateUserPassword, createEvent, updateEventData };
+const bookEvent = async (data) => {
+    return await PostDataCall(ROUTERS.POST_ROUTE.bookEvent, data);
+}
+
+export { sendOtp, createUser, setUser, updateUserPassword, createEvent, updateEventData, bookEvent };

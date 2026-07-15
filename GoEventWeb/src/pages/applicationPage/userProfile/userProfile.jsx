@@ -59,6 +59,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
   ]);
   // Mock Hosted Events
   const [hostedEvents, setHostedEvents] = useState([]);
+  const [hostedFilter, setHostedFilter] = useState('all');
 
   const GetUserData = async () => {
 
@@ -319,12 +320,67 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                 </svg>
                 My Booked Tickets
               </button>
-              <button className={`profile-menu-item ${activeTab === 'hosted' ? 'active' : ''}`} onClick={() => setActiveTab('hosted')}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" />
-                </svg>
-                My Hosted Events
-              </button>
+              <div className="profile-menu-item-container">
+                <button className={`profile-menu-item ${activeTab === 'hosted' ? 'active' : ''}`} onClick={() => setActiveTab('hosted')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" />
+                  </svg>
+                  My Hosted Events
+                </button>
+                {activeTab === 'hosted' && (
+                  <div className="profile-menu-sub">
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('all')}
+                    >
+                      All Events
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'draft' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('draft')}
+                    >
+                      Draft
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'published' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('published')}
+                    >
+                      Published
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'pending' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('pending')}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'started' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('started')}
+                    >
+                      Started
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'completed' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('completed')}
+                    >
+                      Completed
+                    </button>
+                    <button
+                      type="button"
+                      className={`profile-menu-sub-item ${hostedFilter === 'deleted' ? 'active' : ''}`}
+                      onClick={() => setHostedFilter('deleted')}
+                    >
+                      Deleted
+                    </button>
+                  </div>
+                )}
+              </div>
               <button className={`profile-menu-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -528,91 +584,160 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                 </div>
 
                 {hostedEvents.length > 0 ? (
-                  <div className="hosted-table-wrapper">
-                    <table className="hosted-table">
-                      <thead>
-                        <tr>
-                          <th>Event Details</th>
-                          <th>Category</th>
-                          <th>Status</th>
-                          <th>Registrations</th>
-                          <th>Pricing</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {hostedEvents.map((evt) => (
-                          <tr key={evt._id}>
-                            <td data-label="Event Details">
-                              <div className="hosted-event-title-cell">
-                                <span className="hosted-event-title" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">{evt.title}</span>
-                                <span className="hosted-event-date">
-                                  {new Date(evt.startDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
-                                <span className="slash" style={{ marginLeft: "20px" }}> to </span>
-                                <span className="hosted-event-date">
-                                  {new Date(evt.endDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="hosted-category-cell" data-label="Category">
-                              <span className={evt.category.toLowerCase()}>{evt.category}</span>
-                            </td>
-                            <td data-label="Status">
-                              <span className={`status-badge-dot ${evt.status}`}>
-                                {evt.status.charAt(0).toUpperCase() + evt.status.slice(1)}
-                              </span>
-                            </td>
-                            <td data-label="Registrations">
-                              <div className="registration-progress-container">
-                                <div className="registration-progress-text">
-                                  <strong>{new Date(evt.registrationDeadline).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: "short",
-                                    day: 'numeric'
-                                  })}</strong>
-                                  <span className="slash">/</span>
-                                  <span className="seats-total">{evt.registrationCount}</span>
-                                  <span className="progress-percent"> ({Math.round((evt.seatsFilled / evt.registrationCount) * 100)}%)</span>
-                                </div>
-                                <div className="registration-progress-bar-bg">
-                                  <div
-                                    className="registration-progress-bar-fill"
-                                    style={{ width: `${Math.min((evt.seatsFilled / evt.registrationCount) * 100, 100)}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </td>
-                            <td data-label="Pricing">
-                              <span className="hosted-price-tag">
-                                {evt.price === 0 ? "FREE" : `₹${evt.ticketPrice}`}
-                              </span>
-                            </td>
-                            <td className="table-actions-cell" data-label="Actions">
-                              <button className="table-action-icon-btn" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
-                                </svg>
-                              </button>
-                              <button className="table-action-icon-btn delete" onClick={() => navigate(`/GoEvent/${profileData._id}/update/${evt._id}`)} title="Edit Event">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                                </svg>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <>
+                    <div className="hosted-filters-bar">
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('all')}
+                      >
+                        All Events
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'draft' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('draft')}
+                      >
+                        Draft
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'published' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('published')}
+                      >
+                        Published
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'pending' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('pending')}
+                      >
+                        Pending
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'started' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('started')}
+                      >
+                        Started
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'completed' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('completed')}
+                      >
+                        Completed
+                      </button>
+                      <button
+                        type="button"
+                        className={`filter-badge ${hostedFilter === 'deleted' ? 'active' : ''}`}
+                        onClick={() => setHostedFilter('deleted')}
+                      >
+                        Deleted
+                      </button>
+                    </div>
+
+                    {hostedEvents.filter(evt => hostedFilter === 'all' || evt.status.toLowerCase() === hostedFilter.toLowerCase()).length > 0 ? (
+                      <div className="hosted-table-wrapper">
+                        <table className="hosted-table">
+                          <thead>
+                            <tr>
+                              <th>Event Details</th>
+                              <th>Category</th>
+                              <th>Status</th>
+                              <th>Registrations</th>
+                              <th>Pricing</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {hostedEvents
+                              .filter((evt) => hostedFilter === 'all' || evt.status.toLowerCase() === hostedFilter.toLowerCase())
+                              .map((evt) => (
+                                <tr key={evt._id}>
+                                  <td data-label="Event Details">
+                                    <div className="hosted-event-title-cell">
+                                      <span className="hosted-event-title" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">{evt.title}</span>
+                                      <span className="hosted-event-date">
+                                        {new Date(evt.startDate).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })}
+                                      </span>
+                                      <span className="slash" style={{ marginLeft: "20px" }}> to </span>
+                                      <span className="hosted-event-date">
+                                        {new Date(evt.endDate).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="hosted-category-cell" data-label="Category">
+                                    <span className={evt.category.toLowerCase()}>{evt.category}</span>
+                                  </td>
+                                  <td data-label="Status">
+                                    <span className={`status-badge-dot ${evt.status}`}>
+                                      {evt.status.charAt(0).toUpperCase() + evt.status.slice(1)}
+                                    </span>
+                                  </td>
+                                  <td data-label="Registrations">
+                                    <div className="registration-progress-container">
+                                      <div className="registration-progress-text">
+                                        <strong>{new Date(evt.registrationDeadline).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: "short",
+                                          day: 'numeric'
+                                        })}</strong>
+                                        <span className="slash">/</span>
+                                        <span className="seats-total">{evt.registrationCount}</span>
+                                        <span className="progress-percent"> ({Math.round((evt.seatsFilled / evt.registrationCount) * 100)}%)</span>
+                                      </div>
+                                      <div className="registration-progress-bar-bg">
+                                        <div
+                                          className="registration-progress-bar-fill"
+                                          style={{ width: `${Math.min((evt.seatsFilled / evt.registrationCount) * 100, 100)}%` }}
+                                        ></div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td data-label="Pricing">
+                                    <span className="hosted-price-tag">
+                                      {evt.price === 0 ? "FREE" : `₹${evt.ticketPrice}`}
+                                    </span>
+                                  </td>
+                                  <td className="table-actions-cell" data-label="Actions">
+                                    <button className="table-action-icon-btn" onClick={() => navigate(`/GoEvent/event/${evt._id}`)} title="View Event Page">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+                                      </svg>
+                                    </button>
+                                    <button className="table-action-icon-btn delete" onClick={() => navigate(`/GoEvent/${profileData._id}/update/${evt._id}`)} title="Edit Event">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                      </svg>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="hosted-empty-state" style={{ minHeight: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                        <div className="empty-state-icon">
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <p className="empty-state-text">No events found matching the "<strong>{hostedFilter}</strong>" status.</p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="hosted-empty-state">
                     <div className="empty-state-icon">
