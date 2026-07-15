@@ -89,8 +89,7 @@ const SetUser = async (req, res) => {
 
         const tokenData = await CreateUserToken(user._id, user.name, user.email);
         if (tokenData.status) {
-            const oldToken = await Token.findOne({ userId: user._id });
-            if (oldToken) await Token.deleteOne({ userId: user._id });
+            await User.updateOne({ _id: user._id }, { attempts: 3 });
             await Token.create({ userId: user._id, token: tokenData.token });
             res.cookie("goeventjwt", tokenData.token, {
                 httpOnly: true,

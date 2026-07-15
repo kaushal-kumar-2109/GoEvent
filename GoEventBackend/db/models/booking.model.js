@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const Booking = new mongoose.Schema({
+const BookingSchema = new mongoose.Schema({
     eventId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Event"
@@ -13,6 +13,26 @@ const Booking = new mongoose.Schema({
         type: Number,
         required: true
     },
+    attenders: [
+        {
+            ticketId: {
+                type: String,
+                required: true
+            },
+            name: {
+                type: String,
+                required: true
+            },
+            email: {
+                type: String,
+                required: true
+            },
+            age: {
+                type: Number,
+                required: true
+            }
+        }
+    ],
     transectionName: {
         type: String,
         required: true
@@ -36,4 +56,5 @@ const Booking = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("Booking", Booking);
+const Booking = mongoose.model("Booking", BookingSchema);
+module.exports = Booking;

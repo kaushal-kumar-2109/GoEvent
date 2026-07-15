@@ -1,4 +1,5 @@
 const Event = require("../../db/models/event.model.js");
+const Booking = require("../../db/models/booking.model.js");
 
 const GetLandingEvents = async (req, res) => {
     try {
@@ -148,9 +149,20 @@ const CreateEvent = async (req, res) => {
 
 const updateEventData = async (req, res) => {
     try {
+        const { status } = req.body;
+
         const eventData = await Event.findById({ _id: req.body._id });
         if (!req.user._id.equals(eventData.organizer)) return res.status(400).json({ success: false, message: "You are not authorized to update this event!" });
         if (req.user.lockedUntil != null) return res.status(400).json({ success: false, message: "You are temporarily blocked from updating events!" });
+
+        if (status === "published" && eventData.ticketPrice > 0) {
+            if (!eventData.paymentQr || eventData.paymentQr == null || eventData.paymentQr == "" || eventData.paymentQr == undefined || eventData.paymentQr == "null")
+                return res.status(400).json({ success: false, tag: "paymentQr", message: "Payment data require" });
+            if (!eventData.paymentUPI || eventData.paymentUPI == null || eventData.paymentUPI == "" || eventData.paymentUPI == undefined || eventData.paymentUPI == "null")
+                return res.status(400).json({ success: false, tag: "paymentUPI", message: "Payment data require" });
+            if (!eventData.paymentUPTName || eventData.paymentUPTName == null || eventData.paymentUPTName == "" || eventData.paymentUPTName == undefined || eventData.paymentUPTName == "null")
+                return res.status(400).json({ success: false, tag: "paymentUPTName", message: "Payment data require" });
+        }
 
         const updatedEvent = await Event.findOneAndUpdate({ _id: req.body._id }, { ...req.body, updatedBy: req.user._id });
         return res.status(200).json({ success: true, message: "Event updated successfully", data: updatedEvent });
@@ -160,8 +172,22 @@ const updateEventData = async (req, res) => {
             success: false,
             message: "Internal server error!",
             error: err.message || err
-        })
+        });
     }
 }
 
-module.exports = { GetLandingEvents, GetEventById, GetAllEvents, CreateEvent, updateEventData };
+
+const BookEvent = async (req, res) => {
+    try {
+        return res.status(400).json({ sucess: false, message: "not created " });
+    } catch (err) {
+        console.log("err => ", err);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error!",
+            error: err.message || err
+        });
+    }
+}
+
+module.exports = { GetLandingEvents, GetEventById, GetAllEvents, CreateEvent, updateEventData, BookEvent };

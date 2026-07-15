@@ -131,11 +131,11 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
     description, category, organizerName, bannerImage, eventMode, venueName, address, city, state, country,
     pincode, googleMapsLink, meetingLink, meetingPassword, startDate, endDate, registrationDeadline,
     ticketPrice, availableSeats, contactEmail, contactPhone, website, socialLinks, speakers, faqs,
-    refundPolicy, termsAndConditions, galleryImages, promotionalVideo, registrationCount
+    refundPolicy, termsAndConditions, galleryImages, promotionalVideo, registrationCount, seatsFilled
   } = eventData;
 
-  const totalSeats = (availableSeats || 0) + (registrationCount || 0);
-  const percentFilled = totalSeats > 0 ? Math.min(100, Math.round(((registrationCount || 0) / totalSeats) * 100)) : 0;
+  const totalSeats = registrationCount;
+  const percentFilled = totalSeats > 0 ? Math.min(100, Math.round(((seatsFilled || 0) / registrationCount) * 100)) : 0;
 
   // Format Dates
   const formattedStart = new Date(startDate).toLocaleString('en-IN', {
@@ -458,8 +458,8 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
                   <div className="seats-progress-fill" style={{ width: `${100 - percentFilled}%` }}></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '0.4rem' }}>
-                  <span>{registrationCount || 0} Registered</span>
-                  <span>{totalSeats} Total capacity</span>
+                  <span>{seatsFilled || 0} Registered</span>
+                  <span>{registrationCount} Total capacity</span>
                 </div>
               </div>
 
@@ -567,20 +567,32 @@ export default function EventDetailPage({ isUserLoggedIn, setIsUserLoggedIn }) {
                     </svg>
                     Online Access details
                   </div>
-                  {meetingLink && (
+                  {(meetingLink && (startDate <= new Date().toISOString().split('T')[0])) ?
                     <div className="credential-field">
                       <span className="credential-label">Meeting URL:</span>
                       <a href={meetingLink} target="_blank" rel="noopener noreferrer" className="credential-value" style={{ color: '#818cf8', textDecoration: 'underline' }}>
                         {meetingLink}
                       </a>
                     </div>
-                  )}
-                  {meetingPassword && (
+                    :
+                    <div className="credential-field">
+                      <span className="credential-label">Meeting URL:</span>
+                      <a href="#" target="_blank" rel="noopener noreferrer" className="credential-value" style={{ color: '#818cf8', textDecoration: 'underline' }}>
+                        Please Wait for the Event Date
+                      </a>
+                    </div>
+                  }
+                  {(meetingPassword && (startDate <= new Date().toISOString().split('T')[0])) ?
                     <div className="credential-field">
                       <span className="credential-label">Access Password:</span>
                       <span className="credential-value">{meetingPassword}</span>
                     </div>
-                  )}
+                    :
+                    <div className="credential-field">
+                      <span className="credential-label">Access Password:</span>
+                      <span className="credential-value">Please Wait for the Event Date</span>
+                    </div>
+                  }
                 </div>
               )}
             </div>

@@ -1,5 +1,4 @@
-const WEB_PATH = "http://localhost:3000";
-// "http://192.168.1.18:3000";
+const WEB_PATH = import.meta.env.VITE_BACKEND_WEB_API;
 const MAIN_SUB_WEB_URL = "/GoEvent";
 
 const ROUTERS = {
