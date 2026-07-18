@@ -203,9 +203,13 @@ const BookEvent = async (req, res) => {
         if (userId.toString() !== req.user._id.toString()) return res.status(401).json({ success: false, message: "User not match!" });
         if (!seats) return res.status(400).json({ success: false, tag: "seats", message: "Seats required" });
         if (seats > eventData.availableSeats) return res.status(400).json({ success: false, tag: "seats", message: "Seats not available!" });
-        if (!transectionName) return res.status(400).json({ success: false, tag: "transectionName", message: "Transection Name required" });
-        if (!transectionId) return res.status(400).json({ success: false, tag: "transectionId", message: "Transection Id required" });
-
+        if (eventData.ticketPrice > 0) {
+            if (!transectionName) return res.status(400).json({ success: false, tag: "transectionName", message: "Transection Name required" });
+            if (!transectionId) return res.status(400).json({ success: false, tag: "transectionId", message: "Transection Id required" });
+        } else {
+            req.body.transectionName = "NA";
+            req.body.transectionId = "NA";
+        }
         await Booking.create(req.body);
         await eventData.updateOne({ availableSeats: eventData.availableSeats - seats, seatsFilled: eventData.seatsFilled + seats });
 

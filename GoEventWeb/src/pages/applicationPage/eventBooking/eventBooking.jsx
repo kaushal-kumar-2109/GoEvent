@@ -370,7 +370,7 @@ export default function EventBooking({ isUserLoggedIn, setIsUserLoggedIn }) {
             </div>
 
             {/* Payment Section */}
-            {isPaid ? (
+            {(isPaid) ? (
               <div className="form-section payment-section">
                 <h3 className="section-label">Payment Information</h3>
                 <p className="payment-intro-text">

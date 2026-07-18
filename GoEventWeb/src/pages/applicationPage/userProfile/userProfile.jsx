@@ -42,21 +42,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     securityAlerts: true
   });
   // Mock Booked Tickets
-  const [ticketsList, setTicketsList] = useState([
-    {
-      id: "TKT-884920",
-      eventTitle: "Sunburn Festival Goa 2026",
-      date: "Dec 28, 2026 - Dec 30, 2026",
-      time: "04:00 PM onwards",
-      location: "Vagator Beach, Goa, India",
-      organizer: "Sunburn Media Ltd",
-      price: 2499,
-      quantity: 2,
-      status: "active",
-      banner: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
-      qrData: "sunburn-goa-2026-tkt-884920"
-    }
-  ]);
+  const [ticketsList, setTicketsList] = useState([]);
   // Mock Hosted Events
   const [hostedEvents, setHostedEvents] = useState([]);
   const [hostedFilter, setHostedFilter] = useState('all');
@@ -71,6 +57,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     const data = {
       userData: response.data.userData,
       createdEvents: response.data.createdEvents,
+      bookedEvents: response.data.bookedEvents,
       notificationsSettings: notifications,
     };
     console.log(data);
@@ -86,7 +73,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
     }));
     setNotifications(() => (prev) => ({ ...prev, ...data.notificationsSettings }));
     setHostedEvents(data.createdEvents);
-
+    setTicketsList(data.bookedEvents);
   };
 
   // Load user data on mount
@@ -524,14 +511,14 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                 {ticketsList.length > 0 ? (
                   <div className="tickets-grid">
                     {ticketsList.map((tkt) => (
-                      <div key={tkt.id} className="ticket-card" onClick={() => setSelectedTicket(tkt)}>
+                      <div key={tkt._doc._id} className="ticket-card" onClick={() => setSelectedTicket(tkt)}>
                         <div className="ticket-banner">
-                          <img src={tkt.banner} alt={tkt.eventTitle} className="ticket-banner-img" />
+                          <img src={tkt.eventData.bannerImage} alt={tkt.eventData.title} className="ticket-banner-img" />
                           <span className={`ticket-status-badge ${tkt.status}`}>{tkt.status}</span>
                         </div>
                         <div className="ticket-card-body">
-                          <span className="ticket-date">{tkt.date}</span>
-                          <h4 className="ticket-title">{tkt.eventTitle}</h4>
+                          <span className="ticket-date">{tkt.eventData.date}</span>
+                          <h4 className="ticket-title">{tkt.eventData.title}</h4>
                           <div className="ticket-location">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
@@ -717,6 +704,11 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                                     <button className="table-action-icon-btn delete" onClick={() => navigate(`/GoEvent/${profileData._id}/update/${evt._id}`)} title="Edit Event">
                                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                         <path d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                      </svg>
+                                    </button>
+                                    <button className="table-action-icon-btn delete" onClick={() => navigate(`/GoEvent/${profileData._id}/update/${evt._id}`)} title="Booked Tickets">
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M2 9a3 3 0 0 1 0-6h20a3 3 0 0 1 0 6 3 3 0 0 0 0 6 3 3 0 0 1 0 6H2a3 3 0 0 1 0-6 3 3 0 0 0 0-6z" />
                                       </svg>
                                     </button>
                                   </td>
@@ -920,7 +912,7 @@ export default function UserProfile({ isUserLoggedIn, setIsUserLoggedIn }) {
                     <div className="preference-icon-info">
                       <div className="preference-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" x2="16" y1="2" x2="16" y2="6" /><line x1="8" x2="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
                       </div>
                       <div className="preference-details">

@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const User = require("../../db/models/user.model.js");
 const Otp = require("../../db/models/otp.model.js");
 const Token = require("../../db/models/token.model.js");
+const Booking = require("../../db/models/booking.model.js");
 const Event = require("../../db/models/event.model.js");
 
 const CreateUserToken = require("../utils/createToken.js");
@@ -189,12 +190,23 @@ const GetUserProfileData = async (req, res) => {
         if (!user) return res.status(401).json({ success: false, message: "User not found!" });
 
         const createdEvent = await Event.find({ organizer: user._id });
+        const bookedEvent = await Booking.find({ userId: user._id });
+        let finalBookedEvent = [];
+
+        for (let i = 0; i < bookedEvent.length; i++) {
+            let event = await Event.findById(bookedEvent[i].eventId);
+            finalBookedEvent.push({
+                ...bookedEvent[i],
+                eventData: event
+            });
+        }
 
         return res.status(200).json({
             success: true,
             message: "Profile fetched successfully!",
             userData: user,
-            createdEvents: createdEvent
+            createdEvents: createdEvent,
+            bookedEvents: finalBookedEvent
         });
 
     } catch (err) {
