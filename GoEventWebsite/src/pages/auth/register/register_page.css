@@ -1,0 +1,6 @@
+@import "../login/login_page.css";
+
+/* Register Page Specific Overrides */
+.auth-wrapper {
+  min-height: 800px;
+}

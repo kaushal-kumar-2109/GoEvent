@@ -1,63 +1,50 @@
-// ------------------------- requiring packages ------------------------- //
-require("dotenv").config();
-const express = require("express");
+// ------------------------- configration package and file ------------------------- 
+require("dotenv").config(); // --- dotenv configration
+require("./config/db.connect.js"); // --- database configration
+require("./config/cloudynary.config.js"); // --- cloudynary configration
+
+// ------------------------- Package requiring ------------------------- 
+const express = require('express');
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 
-// ------------------------- import connect function ------------------------- //
-require("./db/connect.js");
-
-// ------------------------- Cloudinary connection function ------------------------- //
-const { cloudynaryConfig, uploadFile } = require("./cloudynary/cloudynary.js");
-cloudynaryConfig();
-
-// ------------------------- import router files ------------------------- //
-const getRouter = require("./src/routes/get.router.js");
-const postRouter = require("./src/routes/post.router.js");
-const updateRouter = require("./src/routes/put.router.js");
-const deleteRouter = require("./src/routes/delete.router.js");
-
 // ------------------------- initialize express ------------------------- //
 const app = express();
-// ------------------------- port number ------------------------- //
-const PORT = process.env.PORT || 5000;
+const apiVersion = process.env.API_VERSION;
+const port = process.env.PORT || 5000;
 
-// ------------------------- middleware ------------------------- //
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ------------------------- app midleware configration ------------------------- 
+app.use(express.json()); // --- express json configration
+app.use(express.urlencoded({ extended: true })); // --- express urlencoded configration
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: ["http://localhost:5173", "http://192.168.1.18:3000"],
     credentials: true
 }));
 app.use(cookieParser());
 
+// ------------------------- import router files ------------------------- //
+const getRouter = require("./src/routers/get.router.js");
+const postRouter = require("./src/routers/post.router.js");
+const putRouter = require("./src/routers/put.router.js");
+const deleteRouter = require("./src/routers/delete.router.js");
+
 // ------------------------- routes ------------------------- //
-app.use("/GoEvent", getRouter);
-app.use("/GoEvent", postRouter);
-app.use("/GoEvent", updateRouter);
-app.use("/GoEvent", deleteRouter);
+app.use(`/api/${apiVersion}/goevent/gets`, getRouter);
+app.use(`/api/${apiVersion}/goevent/posts`, postRouter);
+app.use(`/api/${apiVersion}/goevent/puts`, putRouter);
+app.use(`/api/${apiVersion}/goevent/deletes`, deleteRouter);
 
 // root router for check
 app.get("/", (req, res) => {
-    res.status(200).json({
-        status: "success",
-        statusCode: 200,
-        message: "Server is running",
-        data: null
-    });
+    res.status(200).json({ status: "success", statusCode: 200, message: "Server is running", data: null });
 });
 
 // all other invalid route
-app.all("*path", (req, res) => {
-    res.status(404).json({
-        status: "error",
-        statusCode: 404,
-        message: "Invalid route",
-        data: null
-    });
+app.all("/*path", (req, res) => {
+    res.status(404).json({ status: "error", statusCode: 404, message: "Invalid route", data: null });
 });
 
 // ------------------------- start server ------------------------- //
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });

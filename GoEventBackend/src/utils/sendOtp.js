@@ -12,7 +12,7 @@ const transporter = nodemailer.createTransport({
 // 2. Define the email options
 const createMailOptions = (email, otp, tag) => {
     // 1. Determine dynamic text based on the tag (login or signup)
-    const isSignup = tag.toLowerCase() === 'signup';
+    const isSignup = tag.toLowerCase() === 'register';
     const actionText = isSignup ? 'creating your GoEvent account' : 'logging into your GoEvent account';
     const subjectText = isSignup ? 'Verify your GoEvent Account' : 'GoEvent Login Verification Code';
     const headingText = isSignup ? 'Verify Your Account' : 'Welcome Back!';
@@ -87,7 +87,7 @@ const createMailOptions = (email, otp, tag) => {
 };
 
 // 3. Send the email
-const SendEmail = async (email, otp, tag = "signup") => {
+const SendEmail = async (email, otp, tag = "register") => {
     const mailOptions = createMailOptions(email, otp, tag);
     try {
         const info = await transporter.sendMail(mailOptions);
