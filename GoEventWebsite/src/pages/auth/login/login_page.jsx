@@ -3,10 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import './login_page.css';
 import { LOGIN_IN } from '../../../apis/sender';
-import { ToastError, ToastSuccess } from '../../../utils/toast_notification';
+import { ToastError, ToastInfo, ToastSuccess } from '../../../utils/toast_notification';
+import { useEffect } from 'react';
 
 export default function LoginPage({ setIsUserLoggedIn }) {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const raw = localStorage.getItem("GoEventUserData");
+    const data = JSON.parse(raw);
+    if (data?.email && data?.role) {
+      ToastInfo("User already logged in");
+      navigate("/");
+    }
+  }, []);
 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -15,6 +25,7 @@ export default function LoginPage({ setIsUserLoggedIn }) {
 
   const [errorTag, setErrorTag] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +38,10 @@ export default function LoginPage({ setIsUserLoggedIn }) {
       setErrorTag("password"); setErrorMessage("Please enter your password"); return;
     }
 
+    setLoading(true);
     const response = await LOGIN_IN({ email, password });
+    setLoading(false);
+
     if (response.success && response.status === 200) {
       ToastSuccess(response.message);
       localStorage.setItem("GoEventUserData", JSON.stringify(response.data));
@@ -37,10 +51,16 @@ export default function LoginPage({ setIsUserLoggedIn }) {
     }
 
     if (response.tag === "email") {
-      setErrorTag("email"); setErrorMessage("Please enter your email"); return;
+      setErrorTag("email");
+      setErrorMessage(response.message);
+      ToastError("User not found with this email");
+      return;
     }
     if (response.tag === "password") {
-      setErrorTag("password"); setErrorMessage("Please enter your password"); return;
+      setErrorTag("password");
+      setErrorMessage(response.message);
+      ToastError(response.message);
+      return;
     }
     ToastError(response.message);
   };
@@ -195,6 +215,7 @@ export default function LoginPage({ setIsUserLoggedIn }) {
                     required
                   />
                 </div>
+                {(errorTag === "email") && <p className="error-message">{errorMessage}</p>}
               </div>
 
               {/* Password Field */}
@@ -238,6 +259,7 @@ export default function LoginPage({ setIsUserLoggedIn }) {
                     )}
                   </button>
                 </div>
+                {(errorTag === "password") && <p className="error-message">{errorMessage}</p>}
               </div>
 
               {/* Remember Me Checkbox */}
@@ -254,8 +276,9 @@ export default function LoginPage({ setIsUserLoggedIn }) {
               </div>
 
               {/* Login Button */}
-              <button type="submit" className="btn btn-primary auth-submit-btn">
-                Login
+              <button type="submit" className="btn btn-primary auth-submit-btn" disabled={loading}>
+                {loading ? <div className="spinner sm" style={{ marginRight: '8px', borderTopColor: '#fff' }}></div> : null}
+                {loading ? 'Logging in...' : 'Login'}
               </button>
             </form>
 

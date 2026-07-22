@@ -1,7 +1,7 @@
 // ------------------------- Package requiring ------------------------- 
 const express = require('express');
 const Token = require("../models/token.model.js");
-const { GetLandingEventsHandler, GetEventsHandler, GetEventDetailsHandler } = require('../handlers/event.handler');
+const { GetLandingEventsHandler, GetEventsHandler, GetEventDetailsHandler, GetOrganizerEventsHandler, GetOrganizerEventDetailsHandler } = require('../handlers/event.handler');
 const { CheckUserAuth } = require('../middleware/auth.midleware');
 const { SendUserData } = require('../handlers/user.handler');
 
@@ -12,6 +12,8 @@ ROUTER.route("/get-user").get(CheckUserAuth, SendUserData);
 ROUTER.route("/get-landing-events").get(GetLandingEventsHandler);
 ROUTER.route("/get-events").get(GetEventsHandler);
 ROUTER.route("/get-event-details/:eid").get(GetEventDetailsHandler);
+ROUTER.route("/get-organizer-event-details/:eid").get(CheckUserAuth, GetOrganizerEventDetailsHandler);
+ROUTER.route("/get-organizer-events").get(CheckUserAuth, GetOrganizerEventsHandler);
 
 ROUTER.route("/user-log-out").get(async (req, res) => {
     try {

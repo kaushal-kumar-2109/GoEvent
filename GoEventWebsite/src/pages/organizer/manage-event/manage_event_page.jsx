@@ -1,11 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ToastSuccess, ToastError } from '../../../utils/toast_notification';
-import { CREATE_EVENT, UPLOAD_IMAGE } from '../../../apis/sender';
-import './create_event_tab.css';
+import { GET_ORGANIZER_EVENT_DETAILS, UPDATE_EVENT, UPLOAD_IMAGE } from '../../../apis/sender';
+import './manage_event_page.css';
 
-export default function CreateEventTab({ userData, onTabChange }) {
+export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData }) {
+  const { eid } = useParams();
+  const navigate = useNavigate();
+  const userData = getUserData || JSON.parse(localStorage.getItem('GoEventUserData') || '{}');
+
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [dbStatus, setDbStatus] = useState('DRAFT');
 
   // File upload input refs
   const bannerInputRef = useRef(null);
@@ -19,7 +26,7 @@ export default function CreateEventTab({ userData, onTabChange }) {
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isUploadingQr, setIsUploadingQr] = useState(false);
 
-  // Form State initialized with default structure matching event.model.js
+  // Form State
   const [formData, setFormData] = useState({
     title: '',
     shortDescription: '',
@@ -30,31 +37,26 @@ export default function CreateEventTab({ userData, onTabChange }) {
     thumbnailImage: '',
     galleryImages: [],
     promotionalVideo: '',
-    // Dates
     startDate: '',
     endDate: '',
     registrationDeadline: '',
-    // Location
     venueName: '',
     address: '',
-    city: 'Mumbai',
-    state: 'Maharashtra',
+    city: '',
+    state: '',
     country: 'India',
     pincode: '',
     googleMapsLink: '',
-    // Tickets & Pricing
-    ticketPrice: 499,
-    totalSeats: 250,
-    availableSeats: 250,
+    ticketPrice: 0,
+    totalSeats: 0,
+    availableSeats: 0,
     paymentUPI: '',
     paymentUPIName: '',
     paymentQr: '',
-    // Organizer details
-    organizerName: userData?.name || '',
-    contactEmail: userData?.email || '',
-    contactPhone: userData?.phone || '',
+    organizerName: '',
+    contactEmail: '',
+    contactPhone: '',
     website: '',
-    // Social Links
     socialLinks: {
       instagram: '',
       facebook: '',
@@ -62,23 +64,103 @@ export default function CreateEventTab({ userData, onTabChange }) {
       twitter: '',
       youtube: ''
     },
-    // Speakers & FAQ & Schedule (initialized empty)
     speakers: [],
     faqs: [],
     schedule: [],
-    refundPolicy: 'Full refund available up to 48 hours prior to event start time.',
-    termsAndConditions: 'Attendees must carry a valid photo ID and e-ticket QR code for entry.',
+    refundPolicy: '',
+    termsAndConditions: '',
     status: 'DRAFT'
   });
 
-  const steps = [
-    { id: 1, label: 'Basic Details' },
-    { id: 2, label: 'Date & Time' },
-    { id: 3, label: 'Location & Venue' },
-    { id: 4, label: 'Tickets & Pricing' },
-    { id: 5, label: 'Additional Details' },
-    { id: 6, label: 'Review & Publish' }
-  ];
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isUserLoggedIN) {
+      ToastError('Please log in to manage your events.');
+      navigate('/login');
+    }
+  }, [isUserLoggedIN, navigate]);
+
+  // Fetch Event Details
+  useEffect(() => {
+    const loadEvent = async () => {
+      if (!eid) {
+        ToastError('Invalid Event Reference.');
+        navigate('/profile');
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const res = await GET_ORGANIZER_EVENT_DETAILS(eid);
+        if (res.success && res.event) {
+          const ev = res.event;
+          
+          const formatDateForInput = (dateStr) => {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          };
+
+          setFormData({
+            title: ev.title || '',
+            shortDescription: ev.shortDescription || '',
+            description: ev.description || '',
+            category: ev.category || 'Concert & Music',
+            eventType: ev.eventType || 'PUBLIC',
+            bannerImage: ev.bannerImage || '',
+            thumbnailImage: ev.thumbnailImage || '',
+            galleryImages: ev.galleryImages || [],
+            promotionalVideo: ev.promotionalVideo || '',
+            startDate: formatDateForInput(ev.startDate),
+            endDate: formatDateForInput(ev.endDate),
+            registrationDeadline: formatDateForInput(ev.registrationDeadline),
+            venueName: ev.venueName || '',
+            address: ev.address || '',
+            city: ev.city || '',
+            state: ev.state || '',
+            country: ev.country || 'India',
+            pincode: ev.pincode || '',
+            googleMapsLink: ev.googleMapsLink || '',
+            ticketPrice: ev.ticketPrice || 0,
+            totalSeats: ev.totalSeats || 0,
+            availableSeats: ev.availableSeats || 0,
+            paymentUPI: ev.paymentUPI || '',
+            paymentUPIName: ev.paymentUPIName || '',
+            paymentQr: ev.paymentQr || '',
+            organizerName: ev.organizerName || '',
+            contactEmail: ev.contactEmail || '',
+            contactPhone: ev.contactPhone || '',
+            website: ev.website || '',
+            socialLinks: {
+              instagram: ev.socialLinks?.instagram || '',
+              facebook: ev.socialLinks?.facebook || '',
+              linkedin: ev.socialLinks?.linkedin || '',
+              twitter: ev.socialLinks?.twitter || '',
+              youtube: ev.socialLinks?.youtube || ''
+            },
+            speakers: ev.speakers || [],
+            faqs: ev.faqs || [],
+            schedule: ev.schedule || [],
+            refundPolicy: ev.refundPolicy || '',
+            termsAndConditions: ev.termsAndConditions || '',
+            status: ev.status || 'DRAFT'
+          });
+          setDbStatus(ev.status || 'DRAFT');
+        } else {
+          ToastError(res.message || 'Failed to retrieve event.');
+          navigate('/profile');
+        }
+      } catch (err) {
+        console.error(err);
+        ToastError('Error communicating with the database.');
+        navigate('/profile');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEvent();
+  }, [eid, navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -94,8 +176,52 @@ export default function CreateEventTab({ userData, onTabChange }) {
     }));
   };
 
-  // Upload Handler
+  // Status check locks
+  const isFieldDisabled = (section, field) => {
+    if (dbStatus === 'DRAFT') {
+      return false; // draft: everything is editable
+    }
+    if (dbStatus === 'PUBLISHED') {
+      if (field === 'ticketPrice') {
+        return true; // published: ticketPrice is locked
+      }
+      return false; // rest can change
+    }
+    if (dbStatus === 'PENDING') {
+      // pending: ONLY location (venueName, address, city, state, country, pincode, googleMapsLink), startDate, endDate, registrationDeadline can change
+      const allowed = [
+        'venueName', 'address', 'city', 'state', 'country', 'pincode', 'googleMapsLink',
+        'startDate', 'endDate', 'registrationDeadline'
+      ];
+      return !allowed.includes(field);
+    }
+    // started, completed, cancelled, deleted: nothing can be changed
+    return true;
+  };
+
+  // Confirm changes from Draft to Published
+  const handleStatusChange = (newStatus) => {
+    if (dbStatus === 'DRAFT' && newStatus === 'PUBLISHED') {
+      const confirmChange = window.confirm(
+        "⚠️ WARNING: Changing Status to PUBLISHED\n\n" +
+        "• Once Published, the Ticket Price cannot be changed anymore.\n" +
+        "• If the event enters Pending status, only location and event dates/deadlines will be editable.\n\n" +
+        "Do you want to proceed with this status change?"
+      );
+      if (!confirmChange) {
+        return;
+      }
+    }
+    handleInputChange('status', newStatus);
+  };
+
+  // Image upload
   const handleImageUpload = async (e, field) => {
+    const isLocked = isFieldDisabled('media', field === 'qr' ? 'paymentQr' : field === 'banner' ? 'bannerImage' : 'thumbnailImage');
+    if (isLocked) {
+      ToastError('Editing media is locked in this status.');
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
 
@@ -111,20 +237,20 @@ export default function CreateEventTab({ userData, onTabChange }) {
       if (res.success && res.url) {
         if (field === 'banner') {
           handleInputChange('bannerImage', res.url);
-          ToastSuccess('Banner image uploaded successfully!');
+          ToastSuccess('Banner uploaded!');
         } else if (field === 'thumbnail') {
           handleInputChange('thumbnailImage', res.url);
-          ToastSuccess('Thumbnail image uploaded successfully!');
+          ToastSuccess('Thumbnail uploaded!');
         } else if (field === 'qr') {
           handleInputChange('paymentQr', res.url);
-          ToastSuccess('Payment QR Code uploaded successfully!');
+          ToastSuccess('Payment QR Code uploaded!');
         }
       } else {
-        ToastError(res.message || 'Failed to upload image.');
+        ToastError(res.message || 'Upload failed.');
       }
     } catch (err) {
       console.error(err);
-      ToastError('Error uploading image to server.');
+      ToastError('Error uploading image.');
     } finally {
       if (field === 'banner') setIsUploadingBanner(false);
       else if (field === 'thumbnail') setIsUploadingThumbnail(false);
@@ -133,6 +259,10 @@ export default function CreateEventTab({ userData, onTabChange }) {
   };
 
   const handleGalleryUpload = async (e) => {
+    if (isFieldDisabled('media', 'galleryImages')) {
+      ToastError('Editing gallery photos is locked.');
+      return;
+    }
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
@@ -150,7 +280,7 @@ export default function CreateEventTab({ userData, onTabChange }) {
           successCount++;
         }
       } catch (err) {
-        console.error('Gallery image upload failed:', err);
+        console.error(err);
       }
     }
 
@@ -159,7 +289,7 @@ export default function CreateEventTab({ userData, onTabChange }) {
         ...prev,
         galleryImages: [...prev.galleryImages, ...uploadedUrls]
       }));
-      ToastSuccess(`Successfully uploaded ${successCount} gallery images!`);
+      ToastSuccess(`Uploaded ${successCount} gallery images!`);
     } else {
       ToastError('Failed to upload gallery images.');
     }
@@ -167,6 +297,10 @@ export default function CreateEventTab({ userData, onTabChange }) {
   };
 
   const handleRemoveGalleryImage = (indexToRemove) => {
+    if (isFieldDisabled('media', 'galleryImages')) {
+      ToastError('Editing gallery photos is locked.');
+      return;
+    }
     setFormData(prev => ({
       ...prev,
       galleryImages: prev.galleryImages.filter((_, idx) => idx !== indexToRemove)
@@ -174,72 +308,33 @@ export default function CreateEventTab({ userData, onTabChange }) {
     ToastSuccess('Removed gallery image.');
   };
 
-  // Submit Helper (handles Draft and Published status)
-  const submitEvent = async (finalStatus) => {
-    // Validate Required Fields
-    if (!formData.title.trim()) {
-      ToastError('Event Title is required!');
-      return;
-    }
-    if (!formData.shortDescription.trim()) {
-      ToastError('Short Description is required!');
-      return;
-    }
-    if (!formData.description.trim()) {
-      ToastError('Detailed Description is required!');
-      return;
-    }
-    if (!formData.category) {
-      ToastError('Category is required!');
-      return;
-    }
-    if (!formData.bannerImage) {
-      ToastError('Event Banner Image is required! Please upload one from the media panel.');
-      return;
-    }
-    if (!formData.startDate) {
-      ToastError('Start Date & Time is required!');
-      return;
-    }
-    if (!formData.endDate) {
-      ToastError('End Date & Time is required!');
-      return;
-    }
+  const handleUpdateSubmit = async () => {
+    if (!formData.title.trim()) return ToastError('Event Title is required!');
+    if (!formData.shortDescription.trim()) return ToastError('Short Description is required!');
+    if (!formData.description.trim()) return ToastError('Detailed Description is required!');
+    if (!formData.category) return ToastError('Category is required!');
+    if (!formData.bannerImage) return ToastError('Event Banner Image is required!');
+    if (!formData.startDate) return ToastError('Start Date is required!');
+    if (!formData.endDate) return ToastError('End Date is required!');
     if (new Date(formData.startDate) >= new Date(formData.endDate)) {
-      ToastError('Event end date must be after start date!');
-      return;
+      return ToastError('End date must be after start date!');
     }
 
-    setIsSubmitting(true);
+    setIsSaving(true);
     try {
-      const payload = {
-        ...formData,
-        status: finalStatus
-      };
-      
-      const res = await CREATE_EVENT(payload);
+      const res = await UPDATE_EVENT(eid, formData);
       if (res.success) {
-        ToastSuccess(finalStatus === 'PUBLISHED' ? '🎉 Event Published Successfully!' : 'Event saved as Draft successfully!');
-        if (typeof onTabChange === 'function') {
-          onTabChange('my_events');
-        }
+        ToastSuccess('🎉 Event updated successfully!');
+        navigate('/profile');
       } else {
-        ToastError(res.message || 'Failed to save event.');
+        ToastError(res.message || 'Failed to update event.');
       }
     } catch (err) {
       console.error(err);
-      ToastError('An error occurred while saving the event.');
+      ToastError('Error saving event updates.');
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
-  };
-
-  const handleSaveDraft = () => {
-    submitEvent('DRAFT');
-  };
-
-  const handlePublishEvent = () => {
-    submitEvent('PUBLISHED');
   };
 
   const handleNextStep = () => {
@@ -250,37 +345,68 @@ export default function CreateEventTab({ userData, onTabChange }) {
     if (currentStep > 1) setCurrentStep(prev => prev - 1);
   };
 
-  return (
-    <div className="create-event-tab-container">
-      {/* Top Header Row */}
-      <div className="create-event-header-row">
-        <div>
-          <h1 className="tab-title">Create New Event</h1>
-          <p className="tab-subtitle">Fill in the details below to create your event. You can save as draft anytime.</p>
-        </div>
-        <div className="header-action-buttons">
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={handleSaveDraft}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Saving...' : 'Save Draft'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={handlePublishEvent}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Publishing...' : 'Publish Event'}
-          </button>
-        </div>
-      </div>
+  const steps = [
+    { id: 1, label: 'Basic Details' },
+    { id: 2, label: 'Date & Time' },
+    { id: 3, label: 'Location & Venue' },
+    { id: 4, label: 'Tickets & Pricing' },
+    { id: 5, label: 'Additional Details' },
+    { id: 6, label: 'Review & Save' }
+  ];
 
-      {/* Stepper Progress Bar */}
-      <div className="create-event-stepper-wrapper">
-        <div className="stepper-steps-row">
+  if (isLoading) {
+    return (
+      <div className="manage-page-loader">
+        <div className="spinner"></div>
+        <p>Loading Event Data...</p>
+      </div>
+    );
+  }
+
+  const isPendingStatus = dbStatus === 'PENDING';
+  const isLockedStatus = dbStatus !== 'DRAFT' && dbStatus !== 'PUBLISHED' && dbStatus !== 'PENDING';
+
+  return (
+    <div className={`manage-page-wrapper theme-${getTheam}`}>
+      {/* Top Navbar */}
+      <header className="manage-header-navbar">
+        <div className="navbar-logo-wrap">
+          <Link to="/GoEvent" className="navbar-brand">
+            <svg viewBox="0 0 24 24" width="28" height="28" className="brand-logo-icon">
+              <path fill="currentColor" d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+            </svg>
+            <span className="brand-logo-text">GoEvent</span>
+          </Link>
+          <span className="navbar-separator">/</span>
+          <span className="navbar-page-title">Manage Event</span>
+        </div>
+        <div className="navbar-actions-wrap">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/profile')}>
+            Cancel & Exit
+          </button>
+          {!isLockedStatus && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={handleUpdateSubmit} disabled={isSaving}>
+              {isSaving ? 'Save & Exit' : 'Save & Exit'}
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Warning Banners */}
+      {isPendingStatus && (
+        <div className="manage-alert-banner pending-warning">
+          <strong>⚠️ Pending Status lock:</strong> Only location, event dates, and registration deadline can be edited.
+        </div>
+      )}
+      {isLockedStatus && (
+        <div className="manage-alert-banner locked-warning">
+          <strong>🚫 Read-Only mode:</strong> This event is in <strong>{dbStatus}</strong> status and cannot be edited.
+        </div>
+      )}
+
+      {/* Stepper Progress Section */}
+      <div className="manage-stepper-container">
+        <div className="manage-stepper-row">
           {steps.map((step, idx) => {
             const isActive = currentStep === step.id;
             const isCompleted = currentStep > step.id;
@@ -288,22 +414,14 @@ export default function CreateEventTab({ userData, onTabChange }) {
               <React.Fragment key={step.id}>
                 <button
                   type="button"
-                  className={`stepper-step-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                  className={`stepper-button-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
                   onClick={() => setCurrentStep(step.id)}
                 >
-                  <div className="step-circle">
-                    {isCompleted ? (
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    ) : (
-                      step.id
-                    )}
-                  </div>
-                  <span className="step-label">{step.label}</span>
+                  <div className="stepper-circle-number">{step.id}</div>
+                  <span className="stepper-label-text">{step.label}</span>
                 </button>
                 {idx < steps.length - 1 && (
-                  <div className={`step-connector-line ${currentStep > step.id ? 'active' : ''}`}></div>
+                  <div className={`stepper-connector-line ${currentStep > step.id ? 'active' : ''}`}></div>
                 )}
               </React.Fragment>
             );
@@ -311,43 +429,42 @@ export default function CreateEventTab({ userData, onTabChange }) {
         </div>
       </div>
 
-      {/* Main Grid: Left Form Column + Right Sidebar Preview */}
-      <div className="create-event-layout-grid">
+      {/* Layout Grid */}
+      <main className="manage-layout-grid-content">
         {/* Form Column */}
-        <div className="create-event-main-col">
+        <div className="manage-main-form-column">
           {/* STEP 1: Basic Details */}
           {currentStep === 1 && (
             <>
               <div className="form-section-card">
                 <div className="section-card-header">
                   <h3 className="section-card-title">Basic Details</h3>
-                  <p className="section-card-subtitle">Add the basic information about your event.</p>
+                  <p className="section-card-subtitle">Edit basic event details, title, and access type.</p>
                 </div>
 
                 <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">
-                      Event Title <span className="required-star">*</span>
+                      Event Title
                       <span className="char-counter">{formData.title.length}/100</span>
                     </label>
                     <input
                       type="text"
                       className="form-input"
-                      placeholder="Enter event title"
                       maxLength={100}
                       value={formData.title}
                       onChange={e => handleInputChange('title', e.target.value)}
+                      disabled={isFieldDisabled('basic', 'title')}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">
-                      Category <span className="required-star">*</span>
-                    </label>
+                    <label className="form-label">Category</label>
                     <select
                       className="form-select"
                       value={formData.category}
                       onChange={e => handleInputChange('category', e.target.value)}
+                      disabled={isFieldDisabled('basic', 'category')}
                     >
                       <option value="Concert & Music">Concert & Music</option>
                       <option value="Comedy & Entertainment">Comedy & Entertainment</option>
@@ -360,119 +477,90 @@ export default function CreateEventTab({ userData, onTabChange }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">
-                    Short Description <span className="required-star">*</span>
-                    <span className="char-counter">{formData.shortDescription.length}/150</span>
-                  </label>
+                  <label className="form-label">Short Description</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Write a short description about your event"
                     maxLength={150}
                     value={formData.shortDescription}
                     onChange={e => handleInputChange('shortDescription', e.target.value)}
+                    disabled={isFieldDisabled('basic', 'shortDescription')}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">
-                    Detailed Description <span className="required-star">*</span>
-                    <span className="char-counter">{formData.description.length}/5000</span>
-                  </label>
+                  <label className="form-label">Detailed Description</label>
                   <textarea
                     className="form-textarea rich-editor-textarea"
-                    placeholder="Tell people more about your event..."
-                    maxLength={5000}
                     value={formData.description}
                     onChange={e => handleInputChange('description', e.target.value)}
+                    disabled={isFieldDisabled('basic', 'description')}
                   ></textarea>
                 </div>
 
-                {/* Event Type Radio Cards */}
                 <div className="form-group">
-                  <label className="form-label">Event Access Type <span className="required-star">*</span></label>
+                  <label className="form-label">Event Access Type</label>
                   <div className="event-type-grid">
                     <div
-                      className={`event-type-card ${formData.eventType === 'PUBLIC' ? 'selected' : ''}`}
-                      onClick={() => handleInputChange('eventType', 'PUBLIC')}
+                      className={`event-type-card ${formData.eventType === 'PUBLIC' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
+                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'PUBLIC')}
                     >
                       <div className="event-type-icon">🌐</div>
                       <div className="event-type-meta">
                         <h4>Public Event</h4>
-                        <p>Anyone can view and book tickets</p>
+                        <p>Open for all bookings</p>
                       </div>
                     </div>
 
                     <div
-                      className={`event-type-card ${formData.eventType === 'PRIVATE' ? 'selected' : ''}`}
-                      onClick={() => handleInputChange('eventType', 'PRIVATE')}
+                      className={`event-type-card ${formData.eventType === 'PRIVATE' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
+                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'PRIVATE')}
                     >
                       <div className="event-type-icon">🔒</div>
                       <div className="event-type-meta">
                         <h4>Private Event</h4>
-                        <p>Only invited people can join</p>
+                        <p>Invite-only attendance</p>
                       </div>
                     </div>
 
                     <div
-                      className={`event-type-card ${formData.eventType === 'ALL' ? 'selected' : ''}`}
-                      onClick={() => handleInputChange('eventType', 'ALL')}
+                      className={`event-type-card ${formData.eventType === 'ALL' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
+                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'ALL')}
                     >
                       <div className="event-type-icon">👥</div>
                       <div className="event-type-meta">
                         <h4>All / Both</h4>
-                        <p>Both public and private access</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Organizer Details Section */}
+              {/* Organizer Detail Card */}
               <div className="form-section-card">
                 <div className="section-card-header">
-                  <h3 className="section-card-title">Organizer Details</h3>
-                  <p className="section-card-subtitle">These details will be visible to attendees.</p>
+                  <h3 className="section-card-title">Organizer details</h3>
                 </div>
-
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label className="form-label">Organizer Name <span className="required-star">*</span></label>
+                    <label className="form-label">Organizer Name</label>
                     <input
                       type="text"
                       className="form-input"
                       value={formData.organizerName}
                       onChange={e => handleInputChange('organizerName', e.target.value)}
+                      disabled={isFieldDisabled('organizer', 'organizerName')}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Contact Email <span className="required-star">*</span></label>
+                    <label className="form-label">Contact Email</label>
                     <input
                       type="email"
                       className="form-input"
                       value={formData.contactEmail}
                       onChange={e => handleInputChange('contactEmail', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Contact Phone</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.contactPhone}
-                      onChange={e => handleInputChange('contactPhone', e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Official Website</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={formData.website}
-                      onChange={e => handleInputChange('website', e.target.value)}
+                      disabled={isFieldDisabled('organizer', 'contactEmail')}
                     />
                   </div>
                 </div>
@@ -485,39 +573,42 @@ export default function CreateEventTab({ userData, onTabChange }) {
             <div className="form-section-card">
               <div className="section-card-header">
                 <h3 className="section-card-title">Date & Time Settings</h3>
-                <p className="section-card-subtitle">Specify when your event starts, ends, and registration deadlines.</p>
+                <p className="section-card-subtitle">These dates remain editable in DRAFT, PUBLISHED, and PENDING states.</p>
               </div>
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label className="form-label">Start Date & Time <span className="required-star">*</span></label>
+                  <label className="form-label">Start Date & Time</label>
                   <input
                     type="datetime-local"
                     className="form-input"
                     value={formData.startDate}
                     onChange={e => handleInputChange('startDate', e.target.value)}
+                    disabled={isFieldDisabled('schedule', 'startDate')}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">End Date & Time <span className="required-star">*</span></label>
+                  <label className="form-label">End Date & Time</label>
                   <input
                     type="datetime-local"
                     className="form-input"
                     value={formData.endDate}
                     onChange={e => handleInputChange('endDate', e.target.value)}
+                    disabled={isFieldDisabled('schedule', 'endDate')}
                   />
                 </div>
+              </div>
 
-                <div className="form-group">
-                  <label className="form-label">Registration Deadline</label>
-                  <input
-                    type="datetime-local"
-                    className="form-input"
-                    value={formData.registrationDeadline}
-                    onChange={e => handleInputChange('registrationDeadline', e.target.value)}
-                  />
-                </div>
+              <div className="form-group mt-2">
+                <label className="form-label">Registration Deadline</label>
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  value={formData.registrationDeadline}
+                  onChange={e => handleInputChange('registrationDeadline', e.target.value)}
+                  disabled={isFieldDisabled('schedule', 'registrationDeadline')}
+                />
               </div>
             </div>
           )}
@@ -527,28 +618,29 @@ export default function CreateEventTab({ userData, onTabChange }) {
             <div className="form-section-card">
               <div className="section-card-header">
                 <h3 className="section-card-title">Location & Venue Details</h3>
-                <p className="section-card-subtitle">Provide physical venue info or Google Maps coordinates.</p>
+                <p className="section-card-subtitle">These details remain editable in DRAFT, PUBLISHED, and PENDING states.</p>
               </div>
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label className="form-label">Venue Name <span className="required-star">*</span></label>
+                  <label className="form-label">Venue Name</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. KTPO Convention Center"
                     value={formData.venueName}
                     onChange={e => handleInputChange('venueName', e.target.value)}
+                    disabled={isFieldDisabled('location', 'venueName')}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">City <span className="required-star">*</span></label>
+                  <label className="form-label">City</label>
                   <input
                     type="text"
                     className="form-input"
                     value={formData.city}
                     onChange={e => handleInputChange('city', e.target.value)}
+                    disabled={isFieldDisabled('location', 'city')}
                   />
                 </div>
 
@@ -559,6 +651,7 @@ export default function CreateEventTab({ userData, onTabChange }) {
                     className="form-input"
                     value={formData.state}
                     onChange={e => handleInputChange('state', e.target.value)}
+                    disabled={isFieldDisabled('location', 'state')}
                   />
                 </div>
 
@@ -567,9 +660,9 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. 400051"
                     value={formData.pincode}
                     onChange={e => handleInputChange('pincode', e.target.value)}
+                    disabled={isFieldDisabled('location', 'pincode')}
                   />
                 </div>
               </div>
@@ -578,9 +671,9 @@ export default function CreateEventTab({ userData, onTabChange }) {
                 <label className="form-label">Full Address</label>
                 <textarea
                   className="form-textarea"
-                  placeholder="Street address, building name, landmark..."
                   value={formData.address}
                   onChange={e => handleInputChange('address', e.target.value)}
+                  disabled={isFieldDisabled('location', 'address')}
                 ></textarea>
               </div>
 
@@ -589,9 +682,9 @@ export default function CreateEventTab({ userData, onTabChange }) {
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="https://maps.google.com/?q=..."
                   value={formData.googleMapsLink}
                   onChange={e => handleInputChange('googleMapsLink', e.target.value)}
+                  disabled={isFieldDisabled('location', 'googleMapsLink')}
                 />
               </div>
             </div>
@@ -602,27 +695,31 @@ export default function CreateEventTab({ userData, onTabChange }) {
             <div className="form-section-card">
               <div className="section-card-header">
                 <h3 className="section-card-title">Tickets & Seat Allocation</h3>
-                <p className="section-card-subtitle">Set your ticket pricing, seat capacity, and payment UPI details.</p>
+                {dbStatus === 'PUBLISHED' && (
+                  <p className="status-warning-inline">Ticket price is locked after the event is published.</p>
+                )}
               </div>
 
               <div className="form-grid-3">
                 <div className="form-group">
-                  <label className="form-label">Ticket Price (₹) <span className="required-star">*</span></label>
+                  <label className="form-label">Ticket Price (₹)</label>
                   <input
                     type="number"
                     className="form-input"
                     value={formData.ticketPrice}
                     onChange={e => handleInputChange('ticketPrice', Number(e.target.value))}
+                    disabled={isFieldDisabled('tickets', 'ticketPrice')}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Total Seats Capacity <span className="required-star">*</span></label>
+                  <label className="form-label">Total Seats Capacity</label>
                   <input
                     type="number"
                     className="form-input"
                     value={formData.totalSeats}
                     onChange={e => handleInputChange('totalSeats', Number(e.target.value))}
+                    disabled={isFieldDisabled('tickets', 'totalSeats')}
                   />
                 </div>
 
@@ -630,10 +727,10 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   <label className="form-label">Available Seats</label>
                   <input
                     type="number"
-                    title='Seats after removing reserve seats'
                     className="form-input"
                     value={formData.availableSeats}
                     onChange={e => handleInputChange('availableSeats', Number(e.target.value))}
+                    disabled={isFieldDisabled('tickets', 'availableSeats')}
                   />
                 </div>
               </div>
@@ -644,9 +741,9 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. organizer@upi"
                     value={formData.paymentUPI}
                     onChange={e => handleInputChange('paymentUPI', e.target.value)}
+                    disabled={isFieldDisabled('tickets', 'paymentUPI')}
                   />
                 </div>
 
@@ -655,14 +752,13 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Account holder name"
                     value={formData.paymentUPIName}
                     onChange={e => handleInputChange('paymentUPIName', e.target.value)}
+                    disabled={isFieldDisabled('tickets', 'paymentUPIName')}
                   />
                 </div>
               </div>
 
-              {/* Payment QR Upload */}
               <div className="form-group">
                 <label className="form-label">Payment QR Code (Optional)</label>
                 <input
@@ -671,16 +767,22 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   style={{ display: 'none' }}
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e, 'qr')}
+                  disabled={isFieldDisabled('tickets', 'paymentQr')}
                 />
                 {formData.paymentQr && !isUploadingQr ? (
                   <div className="uploaded-qr-container">
                     <img src={formData.paymentQr} alt="Payment QR" className="qr-preview-thumb" />
-                    <button type="button" className="btn btn-secondary btn-xs mt-1" onClick={() => qrInputRef.current.click()}>
-                      Change QR Code
-                    </button>
+                    {!isFieldDisabled('tickets', 'paymentQr') && (
+                      <button type="button" className="btn btn-secondary btn-xs mt-1" onClick={() => qrInputRef.current.click()}>
+                        Change QR Code
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div className="upload-dropzone qr-upload" onClick={() => qrInputRef.current.click()}>
+                  <div 
+                    className={`upload-dropzone qr-upload ${isFieldDisabled('tickets', 'paymentQr') ? 'disabled-drop' : ''}`} 
+                    onClick={() => !isFieldDisabled('tickets', 'paymentQr') && qrInputRef.current.click()}
+                  >
                     <div className="upload-icon-circle">
                       {isUploadingQr ? <div className="spinner"></div> : '📱'}
                     </div>
@@ -696,17 +798,16 @@ export default function CreateEventTab({ userData, onTabChange }) {
             <div className="form-section-card">
               <div className="section-card-header">
                 <h3 className="section-card-title">Additional Policies & Info</h3>
-                <p className="section-card-subtitle">Set refund rules, terms & conditions, and promotional videos.</p>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Promotional Video URL (YouTube / Vimeo)</label>
+                <label className="form-label">Promotional Video URL</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="https://youtube.com/watch?v=..."
                   value={formData.promotionalVideo}
                   onChange={e => handleInputChange('promotionalVideo', e.target.value)}
+                  disabled={isFieldDisabled('additional', 'promotionalVideo')}
                 />
               </div>
 
@@ -716,6 +817,7 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   className="form-textarea"
                   value={formData.refundPolicy}
                   onChange={e => handleInputChange('refundPolicy', e.target.value)}
+                  disabled={isFieldDisabled('additional', 'refundPolicy')}
                 ></textarea>
               </div>
 
@@ -725,94 +827,77 @@ export default function CreateEventTab({ userData, onTabChange }) {
                   className="form-textarea"
                   value={formData.termsAndConditions}
                   onChange={e => handleInputChange('termsAndConditions', e.target.value)}
+                  disabled={isFieldDisabled('additional', 'termsAndConditions')}
                 ></textarea>
               </div>
             </div>
           )}
 
-          {/* STEP 6: Review & Publish */}
+          {/* STEP 6: Review & Status Adjustments */}
           {currentStep === 6 && (
             <div className="form-section-card">
               <div className="section-card-header">
-                <h3 className="section-card-title">Review & Final Settings</h3>
-                <p className="section-card-subtitle">Review all your entered information before saving.</p>
+                <h3 className="section-card-title">Review & Save</h3>
               </div>
 
-              <div className="form-grid-2">
-                <div>
-                  <strong>Title:</strong> {formData.title || 'Untitled Event'}
-                </div>
-                <div>
-                  <strong>Category:</strong> {formData.category}
-                </div>
-                <div>
-                  <strong>Price:</strong> ₹{formData.ticketPrice}
-                </div>
-                <div>
-                  <strong>Venue:</strong> {formData.venueName || 'N/A'}, {formData.city}
-                </div>
+              <div className="review-meta-summary">
+                <p><strong>Title:</strong> {formData.title || 'Untitled Event'}</p>
+                <p><strong>Category:</strong> {formData.category}</p>
+                <p><strong>Price:</strong> ₹{formData.ticketPrice}</p>
+                <p><strong>Database Status:</strong> <span className={`preview-status-badge status-${dbStatus.toLowerCase()}`}>{dbStatus}</span></p>
               </div>
 
-              {/* Status Field Dropdown */}
-              <div className="form-group mt-2">
-                <label className="form-label">
-                  Event Status <span className="required-star">*</span>
-                </label>
-                <select
-                  className="form-select"
-                  value={formData.status}
-                  onChange={e => handleInputChange('status', e.target.value)}
-                >
-                  <option value="DRAFT">Draft</option>
-                  <option value="PUBLISHED">Published</option>
-                </select>
-                <p className="form-help-text" style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Newly created events are saved in <strong>Draft</strong> mode by default. Change this to <strong>Published</strong> to make your event public immediately upon save.
-                </p>
-              </div>
-
-              <p className="tab-subtitle mt-2">Ready to save? You can save as Draft or Publish directly.</p>
+              {!isLockedStatus && (
+                <div className="form-group mt-3">
+                  <label className="form-label font-bold">Change Event Status</label>
+                  <select
+                    className="form-select"
+                    value={formData.status}
+                    onChange={e => handleStatusChange(e.target.value)}
+                    disabled={dbStatus !== 'DRAFT'}
+                  >
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                  </select>
+                  {dbStatus === 'DRAFT' && (
+                    <p className="form-help-text mt-1 text-muted">
+                      Moving status to <strong>Published</strong> enables the payment checks and locks edit details fields.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Step Footer Navigation */}
-          <div className="step-navigation-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => onTabChange && onTabChange('my_events')}
-            >
+          {/* Footer Controls */}
+          <div className="manage-navigation-controls">
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('/profile')}>
               Cancel
             </button>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="action-step-buttons">
               {currentStep > 1 && (
                 <button type="button" className="btn btn-secondary" onClick={handlePrevStep}>
                   Previous
                 </button>
               )}
-
               {currentStep < 6 ? (
                 <button type="button" className="btn btn-primary" onClick={handleNextStep}>
-                  Next: {steps[currentStep]?.label || 'Next'} →
+                  Next
                 </button>
               ) : (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => submitEvent(formData.status)}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Saving Event...' : 'Save & Exit'}
-                </button>
+                !isLockedStatus && (
+                  <button type="button" className="btn btn-primary" onClick={handleUpdateSubmit} disabled={isSaving}>
+                    {isSaving ? 'Saving Changes...' : 'Save & Exit'}
+                  </button>
+                )
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Sidebar Column (Media & Live Preview) */}
-        <div className="create-event-sidebar-col">
-          {/* Media Images Card */}
+        {/* Media & Preview Column */}
+        <div className="manage-sidebar-column">
           <div className="form-section-card media-upload-card">
             <h4 className="tips-title">Event Banner Image *</h4>
             <input
@@ -821,21 +906,26 @@ export default function CreateEventTab({ userData, onTabChange }) {
               style={{ display: 'none' }}
               accept="image/*"
               onChange={(e) => handleImageUpload(e, 'banner')}
+              disabled={isFieldDisabled('media', 'bannerImage')}
             />
             {formData.bannerImage && !isUploadingBanner ? (
               <div className="uploaded-image-container">
                 <img src={formData.bannerImage} alt="Banner" className="image-preview-thumb" />
-                <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => bannerInputRef.current.click()}>
-                  Change Banner
-                </button>
+                {!isFieldDisabled('media', 'bannerImage') && (
+                  <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => bannerInputRef.current.click()}>
+                    Change Banner
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="upload-dropzone" onClick={() => bannerInputRef.current.click()}>
+              <div 
+                className={`upload-dropzone ${isFieldDisabled('media', 'bannerImage') ? 'disabled-drop' : ''}`} 
+                onClick={() => !isFieldDisabled('media', 'bannerImage') && bannerInputRef.current.click()}
+              >
                 <div className="upload-icon-circle">
                   {isUploadingBanner ? <div className="spinner"></div> : '📷'}
                 </div>
-                <span className="upload-hint-title">{isUploadingBanner ? 'Uploading...' : 'Upload Banner Image'}</span>
-                <span className="upload-hint-sub">Recommended: 1200 x 630px (Max 5MB)</span>
+                <span className="upload-hint-title">{isUploadingBanner ? 'Uploading...' : 'Upload Banner'}</span>
               </div>
             )}
 
@@ -846,21 +936,26 @@ export default function CreateEventTab({ userData, onTabChange }) {
               style={{ display: 'none' }}
               accept="image/*"
               onChange={(e) => handleImageUpload(e, 'thumbnail')}
+              disabled={isFieldDisabled('media', 'thumbnailImage')}
             />
             {formData.thumbnailImage && !isUploadingThumbnail ? (
               <div className="uploaded-image-container">
                 <img src={formData.thumbnailImage} alt="Thumbnail" className="image-preview-thumb" />
-                <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => thumbnailInputRef.current.click()}>
-                  Change Thumbnail
-                </button>
+                {!isFieldDisabled('media', 'thumbnailImage') && (
+                  <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => thumbnailInputRef.current.click()}>
+                    Change Thumbnail
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="upload-dropzone" onClick={() => thumbnailInputRef.current.click()}>
+              <div 
+                className={`upload-dropzone ${isFieldDisabled('media', 'thumbnailImage') ? 'disabled-drop' : ''}`} 
+                onClick={() => !isFieldDisabled('media', 'thumbnailImage') && thumbnailInputRef.current.click()}
+              >
                 <div className="upload-icon-circle">
                   {isUploadingThumbnail ? <div className="spinner"></div> : '🖼️'}
                 </div>
                 <span className="upload-hint-title">{isUploadingThumbnail ? 'Uploading...' : 'Upload Thumbnail'}</span>
-                <span className="upload-hint-sub">Recommended: 600 x 400px</span>
               </div>
             )}
 
@@ -872,41 +967,41 @@ export default function CreateEventTab({ userData, onTabChange }) {
               accept="image/*"
               multiple
               onChange={handleGalleryUpload}
+              disabled={isFieldDisabled('media', 'galleryImages')}
             />
             <div className="gallery-section">
               <div className="gallery-grid">
                 {formData.galleryImages.map((img, idx) => (
                   <div key={idx} className="gallery-item-wrap">
                     <img src={img} alt={`Gallery ${idx}`} className="gallery-img-thumb" />
-                    <button type="button" className="gallery-remove-btn" onClick={() => handleRemoveGalleryImage(idx)}>
-                      ×
-                    </button>
+                    {!isFieldDisabled('media', 'galleryImages') && (
+                      <button type="button" className="gallery-remove-btn" onClick={() => handleRemoveGalleryImage(idx)}>
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
-                {!isUploadingGallery ? (
-                  <div className="gallery-add-card" onClick={() => galleryInputRef.current.click()}>
-                    <span className="plus-sign">+</span>
-                  </div>
-                ) : (
-                  <div className="gallery-add-card loading-card">
-                    <div className="spinner sm"></div>
-                  </div>
+                {!isFieldDisabled('media', 'galleryImages') && (
+                  !isUploadingGallery ? (
+                    <div className="gallery-add-card" onClick={() => galleryInputRef.current.click()}>
+                      <span className="plus-sign">+</span>
+                    </div>
+                  ) : (
+                    <div className="gallery-add-card loading-card">
+                      <div className="spinner sm"></div>
+                    </div>
+                  )
                 )}
               </div>
-              <p className="upload-hint-sub mt-1">Upload multiple photos of venue/previous events.</p>
             </div>
           </div>
 
-          {/* Live Publishing Preview Card */}
+          {/* Live Preview Card */}
           <div className="live-preview-card">
-            <div className="preview-card-header">Live Publishing Preview</div>
+            <div className="preview-card-header">Publishing Preview</div>
             <div className="preview-banner-wrap">
               {formData.bannerImage ? (
-                <img
-                  src={formData.bannerImage}
-                  alt="Banner Preview"
-                  className="preview-banner-img"
-                />
+                <img src={formData.bannerImage} alt="Banner Preview" className="preview-banner-img" />
               ) : (
                 <div className="preview-banner-placeholder">
                   <span>Banner Image Preview</span>
@@ -922,23 +1017,15 @@ export default function CreateEventTab({ userData, onTabChange }) {
               </div>
               <h4 className="preview-title">{formData.title || 'Event Title Preview'}</h4>
               <p className="preview-short-desc">
-                {formData.shortDescription || 'Short description of your event will appear here...'}
+                {formData.shortDescription || 'Short description of your event...'}
               </p>
-
-              <div className="preview-meta-row">
-                <span>📅 {formData.startDate ? new Date(formData.startDate).toLocaleString() : 'Date & Time'}</span>
-              </div>
               <div className="preview-meta-row">
                 <span>📍 {formData.venueName || 'Venue'}, {formData.city}</span>
-              </div>
-
-              <div className="preview-organizer-row">
-                <span>By <strong>{formData.organizerName || 'Organizer'}</strong></span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

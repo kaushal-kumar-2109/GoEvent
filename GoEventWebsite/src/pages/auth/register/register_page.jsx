@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './register_page.css';
 import VerifyOtpPage from '../verify-otp/verify_otp_page';
 
 export default function RegisterPage({ setIsUserLoggedIn }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const raw = localStorage.getItem("GoEventUserData");
+    const data = JSON.parse(raw);
+    if (data?.email && data?.role) {
+      ToastInfo("User already logged in");
+      navigate("/");
+    }
+  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');

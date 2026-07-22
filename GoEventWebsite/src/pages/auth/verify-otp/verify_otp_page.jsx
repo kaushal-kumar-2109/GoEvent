@@ -11,6 +11,8 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
   const [timer, setTimer] = useState(180);
   const [canResend, setCanResend] = useState(false);
   const [getEmail, setEmail] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const navigate = useNavigate();
 
   // Create refs for each input box
@@ -18,15 +20,23 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
 
   const sendOtp = async () => {
     setEmail(userData.email);
-    const response = await SEND_OTP(userData);
-    if (!response.status == 200) {
-      ToastError(response.message);
-      setErrorTag(response.tag);
-      setErrorMessage(response.message);
-      setIsDataField(false);
-      return;
+    setSendingOtp(true);
+    try {
+      const response = await SEND_OTP(userData);
+      if (response.status !== 200) {
+        ToastError(response.message);
+        setErrorTag(response.tag);
+        setErrorMessage(response.message);
+        setIsDataField(false);
+        return;
+      }
+      ToastSuccess(response.message);
+    } catch (err) {
+      console.error(err);
+      ToastError("Failed to send OTP. Please check your network connection.");
+    } finally {
+      setSendingOtp(false);
     }
-    ToastSuccess(response.message);
   }
 
   // Send OTP once on component mount
@@ -95,24 +105,43 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
     e.preventDefault();
     const otpCode = otp.join('');
     userData.otp = otpCode;
-    const response = await SIGN_UP(userData);
-    if (response.status !== 200) {
-      if (response.tag === "otp") {
-        setOtpErr(response.message);
+    setVerifying(true);
+    try {
+      const response = await SIGN_UP(userData);
+      if (response.status !== 200) {
+        if (response.tag === "otp") {
+          setOtpErr(response.message);
+          return;
+        }
+        ToastError(response.message);
+        setErrorTag(response.tag);
+        setErrorMessage(response.message);
+        setIsDataField(false);
         return;
       }
-      ToastError(response.message);
-      setErrorTag(response.tag);
-      setErrorMessage(response.message);
-      setIsDataField(false);
-      return;
+      ToastSuccess(response.message);
+      localStorage.setItem("GoEventUserData", JSON.stringify(response.data));
+      setIsUserLoggedIn(true);
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      ToastError("An error occurred during verification.");
+    } finally {
+      setVerifying(false);
     }
-    ToastSuccess(response.message);
-    localStorage.setItem("GoEventUserData", JSON.stringify(response.data));
-    setIsUserLoggedIn(true);
-    navigate("/");
-
   };
+
+  if (sendingOtp && timer === 180 && otp.every(d => d === '')) {
+    return (
+      <div className="auth-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ marginBottom: '16px' }}></div>
+          <h3>Sending Verification Code...</h3>
+          <p style={{ marginTop: '8px' }}>Please check your inbox at <strong>{userData.email}</strong></p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container">
@@ -239,16 +268,19 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
               {otpErr && <span className="error-message">{otpErr}</span>}
 
               {/* Submit Button */}
-              <button type="submit" className="btn btn-primary auth-submit-btn">
-                Verify & Proceed
+              <button type="submit" className="btn btn-primary auth-submit-btn" disabled={verifying || sendingOtp}>
+                {verifying ? <div className="spinner sm" style={{ marginRight: '8px', borderTopColor: '#fff' }}></div> : null}
+                {verifying ? 'Verifying...' : 'Verify & Proceed'}
               </button>
 
               {/* Resend Code Section */}
               <div className="resend-code-section">
-                {canResend ? (
+                {sendingOtp ? (
+                  <p>Sending new code...</p>
+                ) : canResend ? (
                   <p>
                     Didn't receive the code?{' '}
-                    <button type="button" className="resend-btn" onClick={handleResend}>
+                    <button type="button" className="resend-btn" onClick={handleResend} disabled={verifying}>
                       Resend Code
                     </button>
                   </p>

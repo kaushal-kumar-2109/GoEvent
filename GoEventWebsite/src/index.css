@@ -234,3 +234,25 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* GLOBAL LOADER SPINNER */
+.spinner {
+  border: 3px solid rgba(108, 93, 211, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-color);
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+.spinner.sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

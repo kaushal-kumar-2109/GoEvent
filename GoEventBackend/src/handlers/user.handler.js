@@ -48,7 +48,7 @@ const SetUserLoginHandler = async (req, res) => {
                 return res.status(403).json({ success: false, status: 403, tag: "server", message: "Account is locked! Try again after 24 hours." });
             }
             await User.updateOne({ email }, { attempts: checkUser.attempts - 1 });
-            return res.status(401).json({ success: false, status: 401, tag: "password", message: "Incorrect password!" });
+            return res.status(401).json({ success: false, status: 401, tag: "password", message: `Incorrect password ${checkUser.attempts - 1} attempts remaining` });
         }
 
         await User.updateOne({ email }, { lockedUntil: null, attempts: 3, status: "ACTIVE" });

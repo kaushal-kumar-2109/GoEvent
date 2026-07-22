@@ -196,4 +196,368 @@ const GetEventDetailsHandler = async (req, res) => {
     }
 }
 
-module.exports = { GetLandingEventsHandler, GetEventsHandler, GetEventDetailsHandler }
+const fs = require("fs");
+const { uploadFile } = require("../cloudynary/cloudynary.js");
+
+const UploadImageHandler = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ tag: "upload", success: false, message: "No file uploaded!" });
+        }
+
+        if (req.user.role === "USER") return res.status(403).json({ tag: "role", success: false, message: "your account is not authorized for create event!" });
+
+
+        const result = await uploadFile(req.file.path);
+
+        // Delete the temporary local file
+        try {
+            fs.unlinkSync(req.file.path);
+        } catch (unlinkErr) {
+            console.error("Failed to delete temp file:", unlinkErr);
+        }
+
+        if (!result.status) {
+            return res.status(500).json({ tag: "upload", success: false, message: result.message, error: result.info });
+        }
+
+        return res.status(200).json({
+            tag: "upload",
+            success: true,
+            message: "Image uploaded successfully!",
+            url: result.data.secure_url
+        });
+    } catch (error) {
+        console.error("UploadImageHandler Error:", error);
+        return res.status(500).json({ tag: "server", success: false, message: "Internal server error!", error: error.message });
+    }
+};
+
+const CreateEventHandler = async (req, res) => {
+    try {
+        const {
+            title, shortDescription, description, category, bannerImage, thumbnailImage, galleryImages, promotionalVideo, eventType,
+            venueName, address, city, state, country, pincode, googleMapsLink, startDate, endDate, registrationDeadline, ticketPrice, totalSeats,
+            availableSeats, contactEmail, contactPhone, website, socialLinks,
+            speakers, faqs, refundPolicy, termsAndConditions, paymentQr, paymentUPI, paymentUPIName, schedule, status
+        } = req.body;
+
+        if (req.user.role === "USER") return res.status(403).json({ tag: "role", success: false, message: "your account is not authorized for create event!" });
+
+        // Validation of required fields
+        if (!title || !shortDescription || !description || !category || !bannerImage || !startDate || !endDate) {
+            return res.status(400).json({
+                tag: "validation",
+                success: false,
+                message: "Title, short description, description, category, banner image, start date, and end date are required!"
+            });
+        }
+        if (status != "DRAFT") {
+            if (!paymentQr || !paymentUPI || !paymentUPIName) {
+                if (!paymentQr) return res.status(400).json({ tag: "paymentQr", success: false, message: "PaymentQr is required!" });
+                if (!paymentUPI) return res.status(400).json({ tag: "paymentUpi", success: false, message: "PaymentUpi is required!" });
+                if (!paymentUPIName) return res.status(400).json({ tag: "paymentUPIName", success: false, message: "PaymentUPIName is required!" });
+            }
+        };
+
+        const newEvent = new Event({
+            title,
+            shortDescription,
+            description,
+            category,
+            organizer: req.user._id,
+            organizerName: req.user.name,
+            bannerImage,
+            thumbnailImage: thumbnailImage || bannerImage, // Fallback to banner if thumbnail not provided
+            galleryImages: galleryImages || [],
+            promotionalVideo,
+            eventType: eventType || "PUBLIC",
+            venueName,
+            address,
+            city,
+            state,
+            country: country || "India",
+            pincode,
+            googleMapsLink,
+            startDate: new Date(startDate),
+            endDate: new Date(endDate),
+            registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
+            ticketPrice: ticketPrice !== undefined ? Number(ticketPrice) : 0,
+            totalSeats: totalSeats !== undefined ? Number(totalSeats) : 0,
+            availableSeats: availableSeats !== undefined ? Number(availableSeats) : (totalSeats !== undefined ? Number(totalSeats) : 0),
+            contactEmail: contactEmail || req.user.email,
+            contactPhone: contactPhone || req.user.phone,
+            website,
+            socialLinks: socialLinks || {},
+            speakers: speakers || [],
+            faqs: faqs || [],
+            refundPolicy,
+            termsAndConditions,
+            paymentQr,
+            paymentUPI,
+            paymentUPIName,
+            schedule: schedule || [],
+            status: status || "DRAFT" // Newly created event status is DRAFT by default
+        });
+
+        await newEvent.save();
+
+        return res.status(201).json({
+            tag: "event",
+            status: 201,
+            success: true,
+            message: "Event created successfully!",
+            event: newEvent
+        });
+    } catch (error) {
+        console.error("CreateEventHandler Error:", error);
+        return res.status(500).json({
+            tag: "server",
+            status: 500,
+            success: false,
+            message: "Internal server error!",
+            error: error.message
+        });
+    }
+};
+
+const GetOrganizerEventsHandler = async (req, res) => {
+    try {
+        const events = await Event.find({ organizer: req.user._id }).sort({ createdAt: -1 });
+        return res.status(200).json({
+            tag: "events",
+            status: 200,
+            success: true,
+            message: "Organizer events fetched successfully!",
+            events
+        });
+    } catch (error) {
+        console.error("GetOrganizerEventsHandler Error:", error);
+        return res.status(500).json({
+            tag: "server",
+            status: 500,
+            success: false,
+            message: "Internal server error!",
+            error: error.message
+        });
+    }
+};
+
+const DeleteEventHandler = async (req, res) => {
+    try {
+        const { eid } = req.params;
+        const event = await Event.findById(eid);
+        if (!event) {
+            return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
+        }
+
+        // Authorization check
+        if (event.organizer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                tag: "auth",
+                status: 403,
+                success: false,
+                message: "You are not authorized to delete this event!"
+            });
+        }
+
+        await Event.findByIdAndDelete(eid);
+
+        return res.status(200).json({
+            tag: "event",
+            status: 200,
+            success: true,
+            message: "Event deleted successfully!"
+        });
+    } catch (error) {
+        console.error("DeleteEventHandler Error:", error);
+        return res.status(500).json({
+            tag: "server",
+            status: 500,
+            success: false,
+            message: "Internal server error!",
+            error: error.message
+        });
+    }
+};
+
+const GetOrganizerEventDetailsHandler = async (req, res) => {
+    try {
+        const { eid } = req.params;
+        const event = await Event.findById(eid);
+        if (!event) {
+            return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
+        }
+
+        // Authorization check
+        if (event.organizer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                tag: "auth",
+                status: 403,
+                success: false,
+                message: "You are not authorized to view this event's details!"
+            });
+        }
+
+        return res.status(200).json({
+            tag: "event",
+            status: 200,
+            success: true,
+            message: "Event details fetched successfully!",
+            event
+        });
+    } catch (error) {
+        console.error("GetOrganizerEventDetailsHandler Error:", error);
+        return res.status(500).json({
+            tag: "server",
+            status: 500,
+            success: false,
+            message: "Internal server error!",
+            error: error.message
+        });
+    }
+};
+
+const UpdateEventHandler = async (req, res) => {
+    try {
+        const { eid } = req.params;
+        const event = await Event.findById(eid);
+        if (!event) {
+            return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
+        }
+
+        // Authorization check
+        if (event.organizer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                tag: "auth",
+                status: 403,
+                success: false,
+                message: "You are not authorized to edit this event!"
+            });
+        }
+
+        if (req.user.role === "USER") {
+            return res.status(403).json({
+                tag: "role",
+                success: false,
+                message: "Your account is not authorized to edit events!"
+            });
+        }
+
+        const currentStatus = event.status;
+
+        // Rule: If not in DRAFT and not in PUBLISHED and not in PENDING, nothing can be changed
+        if (currentStatus !== "DRAFT" && currentStatus !== "PUBLISHED" && currentStatus !== "PENDING") {
+            return res.status(400).json({
+                tag: "status",
+                success: false,
+                message: `Events in ${currentStatus} status cannot be edited!`
+            });
+        }
+
+        // Rule: If in PENDING, only location, event dates, and registration deadline can change
+        if (currentStatus === "PENDING") {
+            const allowedFields = [
+                "venueName", "address", "city", "state", "country", "pincode", "googleMapsLink",
+                "startDate", "endDate", "registrationDeadline"
+            ];
+            const updates = Object.keys(req.body);
+            // filter out updates that represent modifications
+            const modifiedFields = updates.filter(field => req.body[field] !== undefined && String(event[field]) !== String(req.body[field]));
+            const isAllowed = modifiedFields.every(field => allowedFields.includes(field));
+            if (!isAllowed) {
+                return res.status(400).json({
+                    tag: "validation",
+                    success: false,
+                    message: "In PENDING status, only location, event dates, and registration deadline can be updated!"
+                });
+            }
+        }
+
+        // Rule: If in PUBLISHED, ticketPrice cannot change
+        if (currentStatus === "PUBLISHED") {
+            if (req.body.ticketPrice !== undefined && Number(req.body.ticketPrice) !== event.ticketPrice) {
+                return res.status(400).json({
+                    tag: "validation",
+                    success: false,
+                    message: "In PUBLISHED status, ticket price cannot be changed!"
+                });
+            }
+        }
+
+        // Validation for status transition DRAFT -> PUBLISHED
+        const newStatus = req.body.status || currentStatus;
+        if (currentStatus === "DRAFT" && newStatus === "PUBLISHED") {
+            const payQr = req.body.paymentQr || event.paymentQr;
+            const payUpi = req.body.paymentUPI || event.paymentUPI;
+            const payName = req.body.paymentUPIName || event.paymentUPIName;
+            if (!payQr || !payUpi || !payName) {
+                if (!payQr) return res.status(400).json({ tag: "paymentQr", success: false, message: "Payment QR Code is required to publish!" });
+                if (!payUpi) return res.status(400).json({ tag: "paymentUpi", success: false, message: "Payment UPI ID is required to publish!" });
+                if (!payName) return res.status(400).json({ tag: "paymentUPIName", success: false, message: "Payment UPI Name is required to publish!" });
+            }
+        }
+
+        // Apply updates
+        const fieldsToUpdate = [
+            "title", "shortDescription", "description", "category", "bannerImage", "thumbnailImage",
+            "galleryImages", "promotionalVideo", "eventType", "venueName", "address", "city",
+            "state", "country", "pincode", "googleMapsLink", "startDate", "endDate",
+            "registrationDeadline", "ticketPrice", "totalSeats", "availableSeats", "contactEmail",
+            "contactPhone", "website", "socialLinks", "speakers", "faqs", "refundPolicy",
+            "termsAndConditions", "paymentQr", "paymentUPI", "paymentUPIName", "schedule", "status"
+        ];
+
+        fieldsToUpdate.forEach(field => {
+            if (req.body[field] !== undefined) {
+                if (currentStatus === "PENDING") {
+                    const locationAndDateFields = [
+                        "venueName", "address", "city", "state", "country", "pincode", "googleMapsLink",
+                        "startDate", "endDate", "registrationDeadline"
+                    ];
+                    if (locationAndDateFields.includes(field)) {
+                        event[field] = req.body[field];
+                    }
+                } else if (currentStatus === "PUBLISHED") {
+                    if (field !== "ticketPrice") {
+                        event[field] = req.body[field];
+                    }
+                } else {
+                    event[field] = req.body[field];
+                }
+            }
+        });
+
+        event.updatedAt = Date.now();
+        await event.save();
+
+        return res.status(200).json({
+            tag: "event",
+            status: 200,
+            success: true,
+            message: "Event updated successfully!",
+            event
+        });
+    } catch (error) {
+        console.error("UpdateEventHandler Error:", error);
+        return res.status(500).json({
+            tag: "server",
+            status: 500,
+            success: false,
+            message: "Internal server error!",
+            error: error.message
+        });
+    }
+};
+
+module.exports = {
+    GetLandingEventsHandler,
+    GetEventsHandler,
+    GetEventDetailsHandler,
+    UploadImageHandler,
+    CreateEventHandler,
+    GetOrganizerEventsHandler,
+    DeleteEventHandler,
+    GetOrganizerEventDetailsHandler,
+    UpdateEventHandler
+}

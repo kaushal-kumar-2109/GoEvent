@@ -6,6 +6,7 @@ import LoginPage from "../pages/auth/login/login_page";
 import RegisterPage from "../pages/auth/register/register_page";
 import ForgotPasswordPage from "../pages/auth/forgot-password/forgot_password_page";
 import ProfilePage from "../pages/profile/profile_page";
+import ManageEventPage from "../pages/organizer/manage-event/manage_event_page";
 
 const MainRouter = ({ isUserLoggedIN, setIsUserLoggedIn, setUserData, getUserData, getTheam, setTheam }) => {
 
@@ -36,6 +37,13 @@ const MainRouter = ({ isUserLoggedIN, setIsUserLoggedIn, setUserData, getUserDat
                         setUserData={setUserData}
                         setIsUserLoggedIn={setIsUserLoggedIn}
                         initialTab="create_event"
+                    />
+                } />
+                <Route path="/GoEvent/manage-event/:eid" element={
+                    <ManageEventPage
+                        getTheam={getTheam}
+                        isUserLoggedIN={isUserLoggedIN}
+                        getUserData={getUserData}
                     />
                 } />
             </Routes>
