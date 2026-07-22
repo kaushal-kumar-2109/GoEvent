@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 
 // test router for check
 app.get("/test", (req, res) => {
-    res.status(200).json({ status: "success", statusCode: 200, message: "Test server is running", data: null });
+    res.json({ status: "success", statusCode: 200, message: "Test server is running", data: null });
 });
 
 // all other invalid route
