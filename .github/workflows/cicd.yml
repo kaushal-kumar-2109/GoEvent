@@ -10,14 +10,21 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x] # Optimized to run on the current active LTS version
+        node-version: [22.x]
 
     steps:
-    # 1. New step to reset permissions before checking out code
+    # 1. Reset permissions first so the runner can interact with files
     - name: Pre-clean Workspace Permissions
       run: |
         if [ -d "${{ github.workspace }}" ]; then
           sudo chown -R $USER:$USER ${{ github.workspace }}
+        fi
+
+    # 2. Backup the .env from the deep backend directory
+    - name: Backup .env
+      run: |
+        if [ -f "${{ github.workspace }}/GoEventBackend/.env" ]; then
+          cp "${{ github.workspace }}/GoEventBackend/.env" /tmp/goevent_env_backup
         fi
 
     - uses: actions/checkout@v4
@@ -27,16 +34,24 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        cache-dependency-path: './GoEventBackend/package-lock.json' # Points to your backend directory lockfile
+        cache-dependency-path: './GoEventBackend/package-lock.json'
 
-    # 2. Navigate to your backend directory to install and build
+    # 3. Restore the .env into the correct GoEventBackend directory after checkout
+    - name: Restore .env
+      run: |
+        if [ -f /tmp/goevent_env_backup ]; then
+          mv /tmp/goevent_env_backup "${{ github.workspace }}/GoEventBackend/.env"
+        fi
+
+    # 4. Install and Build Backend
     - name: Install and Build Backend
       run: |
         cd GoEventBackend
         npm ci
         npm run build --if-present
 
-    # 3. Restart PM2 WITHOUT using sudo
+    # 5. Restart PM2 (Ensure you ran 'pm2 start app.js --name "GoEvent-Backend"' manually once via SSH first)
     - name: Restart Application
       run: |
-        pm2 restart GoEvent-Backend || pm2 start GoEventBackend/app.js --name "GoEvent-Backend"
+        cd GoEventBackend
+        pm2 restart GoEvent-Backend || pm2 start app.js --name "GoEvent-Backend"
