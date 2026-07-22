@@ -39,4 +39,4 @@ jobs:
     # 3. Restart PM2 WITHOUT using sudo
     - name: Restart Application
       run: |
-        pm2 restart GoEvent-Backend || pm2 start GoEventBackend/index.js --name "GoEvent-Backend"
+        pm2 restart GoEvent-Backend || pm2 start GoEventBackend/app.js --name "GoEvent-Backend"
