@@ -39,6 +39,11 @@ app.get("/", (req, res) => {
     res.status(200).json({ status: "success", statusCode: 200, message: "Server is running", data: null });
 });
 
+// test router for check
+app.get("/test", (req, res) => {
+    res.status(200).json({ status: "success", statusCode: 200, message: "Test server is running", data: null });
+});
+
 // all other invalid route
 app.all("/*path", (req, res) => {
     res.status(404).json({ status: "error", statusCode: 404, message: "Invalid route", data: null });

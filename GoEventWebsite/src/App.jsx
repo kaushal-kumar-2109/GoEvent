@@ -33,6 +33,7 @@ function App() {
         document.documentElement.setAttribute('data-theme', themeVal);
       } else {
         setTheam("light");
+        localStorage.removeItem("GoEventUserData");
         document.documentElement.setAttribute('data-theme', "light");
       }
     } catch (error) {

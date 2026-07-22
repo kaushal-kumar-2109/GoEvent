@@ -1,4 +1,4 @@
-const MAIN_URL = import.meta.env.VITE_BACKEND_WEB_API;
+const MAIN_URL = import.meta.env.VITE_BACKEND_WEB_API_1 || import.meta.env.VITE_BACKEND_WEB_API_2;
 const SUB_URL = import.meta.env.VITE_BACKEND_WEB_SUB_API;
 
 const APIS = {
