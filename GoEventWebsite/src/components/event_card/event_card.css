@@ -83,14 +83,14 @@
 }
 
 .event-card-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-color);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 48px; /* Fixed height for two lines to align cards grid */
+  height: 42px; /* Fixed height for aligned cards */
   line-height: 1.3;
 }
 
@@ -100,6 +100,13 @@
   gap: var(--space-1);
   color: var(--text-muted);
   font-size: 13px;
+  overflow: hidden;
+}
+
+.event-card-info-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .info-icon {

@@ -1,8 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAvatarPath } from '../../utils/avatar_utils';
 import './nav_bar.css';
 
-export default function NavBar({ theme, onToggleTheme, onOpenSidebar }) {
-  const [navBarIsActive, setNavBarIsActive] = useState("home");
+export default function NavBar({ isUserLoggedIN, getUserData, theme, onToggleTheme, onOpenSidebar, getTheam, setTheam }) {
+  const [navBarIsActive, setNavBarIsActive] = useState(() => {
+    const path = window.location.pathname;
+    if (path === "/GoEvent" || path === "/GoEvent/") return "home";
+    if (path.includes("/GoEvent/events")) return "events";
+    if (path.includes("/GoEvent/about")) return "about";
+    if (path.includes("/GoEvent/contact")) return "contact";
+    return "";
+  });
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === "/GoEvent" || path === "/GoEvent/") setNavBarIsActive("home");
+    else if (path.includes("/GoEvent/events")) setNavBarIsActive("events");
+    else if (path.includes("/GoEvent/about")) setNavBarIsActive("about");
+    else if (path.includes("/GoEvent/contact")) setNavBarIsActive("contact");
+    else setNavBarIsActive("");
+  }, []);
   return (
     <header className="nav-bar-header">
       <div className="nav-bar-container container">
@@ -19,7 +36,7 @@ export default function NavBar({ theme, onToggleTheme, onOpenSidebar }) {
         {/* Navigation Menu (Desktop) */}
         <nav className="desktop-nav">
           <a href="/GoEvent" onClick={() => setNavBarIsActive("home")} className={navBarIsActive === "home" ? "nav-link active" : "nav-link"}>Home</a>
-          <a href="#events" onClick={() => setNavBarIsActive("events")} className={navBarIsActive === "events" ? "nav-link active" : "nav-link"}>Events</a>
+          <a href="/GoEvent/events" onClick={() => setNavBarIsActive("events")} className={navBarIsActive === "events" ? "nav-link active" : "nav-link"}>Events</a>
           <a href="#about" onClick={() => setNavBarIsActive("about")} className={navBarIsActive === "about" ? "nav-link active" : "nav-link"}>About Us</a>
           <a href="#contact" onClick={() => setNavBarIsActive("contact")} className={navBarIsActive === "contact" ? "nav-link active" : "nav-link"}>Contact</a>
         </nav>
@@ -28,7 +45,7 @@ export default function NavBar({ theme, onToggleTheme, onOpenSidebar }) {
         <div className="nav-actions">
           {/* Theme Toggle Button */}
           <button className="theme-toggle-btn" onClick={onToggleTheme} aria-label="Toggle Theme">
-            {theme === 'dark' ? (
+            {getTheam === 'dark' ? (
               // Sun Icon
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="5"></circle>
@@ -50,10 +67,24 @@ export default function NavBar({ theme, onToggleTheme, onOpenSidebar }) {
           </button>
 
           {/* Desktop auth buttons */}
-          <div className="auth-buttons-desktop">
-            <a href="/login" className="btn btn-text">Log In</a>
-            <a href="/register" className="btn btn-primary">Sign Up</a>
-          </div>
+          {
+            (!isUserLoggedIN) ?
+              <div className="auth-buttons-desktop">
+                <a href="/login" className="btn btn-text">Log In</a>
+                <a href="/register" className="btn btn-primary">Sign Up</a>
+              </div>
+              :
+              <div className="auth-buttons-desktop">
+                <a href="/profile" className="nav-profile-container">
+                  <img
+                    src={getAvatarPath(getUserData?.avatar)}
+                    alt={getUserData?.name || "Profile"}
+                    className="nav-profile-avatar"
+                  />
+                  <span className="nav-profile-name">{getUserData?.name || "Profile"}</span>
+                </a>
+              </div>
+          }
 
           {/* Hamburger Menu Toggle (Mobile) */}
           <button className="hamburger-btn" onClick={onOpenSidebar} aria-label="Open Sidebar Menu">

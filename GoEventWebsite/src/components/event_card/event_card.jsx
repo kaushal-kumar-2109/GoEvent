@@ -3,7 +3,7 @@ import './event_card.css';
 
 export default function EventCard({ event }) {
   return (
-    <div className="event-card">
+    <div className="event-card" onClick={() => window.location.href = `/GoEvent/event-details/${event._id}`} style={{ cursor: 'pointer' }}>
       <div className="event-card-image-wrapper">
         <img src={event.bannerImage} alt={event.title} className="event-card-image" />
         <span className="event-card-category">{event.category}</span>

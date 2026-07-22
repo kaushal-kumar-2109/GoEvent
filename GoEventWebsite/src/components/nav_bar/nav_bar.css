@@ -144,3 +144,48 @@
     display: flex;
   }
 }
+
+/* Profile Icon Styling */
+.nav-profile-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px var(--space-2);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-tag);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  height: 40px;
+}
+
+.nav-profile-container:hover {
+  background-color: var(--primary-light);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--primary-color);
+  background-color: var(--bg-card);
+  transition: transform var(--transition-fast);
+}
+
+.nav-profile-container:hover .nav-profile-avatar {
+  transform: scale(1.05);
+}
+
+.nav-profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

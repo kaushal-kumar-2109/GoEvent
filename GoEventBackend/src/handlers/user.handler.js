@@ -1,10 +1,77 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/user.model.js");
 const Otp = require("../models/otp.model.js");
+const Token = require("../models/token.model.js");
 const SendEmail = require("../utils/sendOtp.js");
 const { CreateToken } = require("../utils/tokenHandler.js");
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const SendUserData = async (req, res) => {
+    try {
+        const userData = {
+            avatar: req.user.avatar, bio: req.user.bio, email: req.user.email, emailNotification: req.user.emailNotification,
+            name: req.user.name, organisation: req.user.organisation, pushNotification: req.user.pushNotification,
+            role: req.user.role, theam: req.user.theam, userName: req.user.userName, _id: req.user._id,
+        }
+        return res.status(200).json({ success: true, status: 200, tag: "user", message: "User Found!", data: userData });
+    } catch (err) {
+        console.log("err => ", err);
+        return res.status(500).json({ success: false, status: 500, tag: "server", message: "Internal server error!" });
+    }
+}
+
+const SetUserLoginHandler = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Email is required!" });
+        if (!password) return res.status(400).json({ tag: "password", status: 400, success: false, message: "Password is required!" });
+        if (!isValidEmail(email)) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Invalid email!" });
+
+        const checkUser = await User.findOne({ email });
+        if (!checkUser) return res.status(400).json({ tag: "email", status: 400, success: false, message: "User not found!" });
+
+        if (checkUser.status != "ACTIVE") {
+            if (checkUser.lockedUntil != null) {
+                const timeRemains = checkUser.lockedUntil - Date.now();
+                const timeInMinutes = Math.ceil(timeRemains / (1000 * 60));
+                if (timeInMinutes > 0) return res.status(403).json({ success: false, status: 403, tag: "server", message: `Account is locked! Try again after ${timeInMinutes} minutes.` });
+            }
+            await User.updateOne({ email }, { lockedUntil: null, attempts: 2, status: "ACTIVE" });
+        }
+
+        const isMatch = await bcrypt.compare(password, checkUser.password);
+        if (!isMatch) {
+            if (checkUser.attempts === 0) {
+                await User.updateOne({ email }, { lockedUntil: Date.now() + 24 * 60 * 60 * 1000, status: "LOCKED" });
+                return res.status(403).json({ success: false, status: 403, tag: "server", message: "Account is locked! Try again after 24 hours." });
+            }
+            await User.updateOne({ email }, { attempts: checkUser.attempts - 1 });
+            return res.status(401).json({ success: false, status: 401, tag: "password", message: "Incorrect password!" });
+        }
+
+        await User.updateOne({ email }, { lockedUntil: null, attempts: 3, status: "ACTIVE" });
+
+        const TokenRes = await CreateToken(checkUser);
+        if (!TokenRes.status) return res.status(500).json({ success: false, status: 500, tag: "server", message: TokenRes.message });
+        await Token.create({ token: TokenRes.token, email: checkUser.email, userId: checkUser._id });
+        res.cookie("GoEventUserToken", TokenRes.token, {
+            httpOnly: true,
+            secure: (process.env.NODE_ENV === "local") ? false : true,
+            sameSite: (process.env.NODE_ENV === "local") ? "lax" : "none",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        const user = { name: checkUser.name, userName: checkUser.userName, email: checkUser.email, phone: checkUser.phone, role: checkUser.role, organisation: checkUser.organisation, bio: checkUser.bio, avatar: checkUser.avatar, theam: checkUser.theam, emailNotification: checkUser.emailNotification, pushNotification: checkUser.pushNotification, memberSince: checkUser.createdAt };
+
+        return res.status(200).json({ success: true, status: 200, tag: "user", message: "User logged in successfully!", data: user });
+
+    } catch (err) {
+        console.log("err => ", err);
+        return res.status(500).json({ success: false, status: 500, tag: "server", message: "Internal server error!" });
+    }
+}
 
 const UserEmailVerificationHandler = async (req, res) => {
     try {
@@ -72,6 +139,7 @@ const UserOtpVerifyCreateUserHandler = async (req, res) => {
         const TokenRes = await CreateToken(newUser);
         if (!TokenRes.status) return res.status(500).json({ success: false, status: 500, tag: "server", message: TokenRes.message });
 
+        await Token.create({ token: TokenRes.token, email: newUser.email, userId: newUser._id });
         res.cookie("GoEventUserToken", TokenRes.token, {
             httpOnly: true,
             secure: (process.env.NODE_ENV === "local") ? false : true,
@@ -80,7 +148,8 @@ const UserOtpVerifyCreateUserHandler = async (req, res) => {
         });
 
         await newUser.save();
-        return res.status(200).json({ success: true, status: 200, tag: "user", message: "User created successfully!" });
+        const user = { name: newUser.name, userName: newUser.userName, email: newUser.email, phone: newUser.phone, role: newUser.role, organisation: newUser.organisation, bio: newUser.bio, avatar: newUser.avatar, theam: newUser.theam, emailNotification: newUser.emailNotification, pushNotification: newUser.pushNotification, memberSince: newUser.createdAt };
+        return res.status(200).json({ success: true, status: 200, tag: "user", message: "User created successfully!", data: user });
 
     } catch (err) {
         console.log("err => ", err);
@@ -88,4 +157,4 @@ const UserOtpVerifyCreateUserHandler = async (req, res) => {
     }
 }
 
-module.exports = { UserEmailVerificationHandler, UserOtpVerifyCreateUserHandler };
+module.exports = { UserEmailVerificationHandler, UserOtpVerifyCreateUserHandler, SetUserLoginHandler, SendUserData };

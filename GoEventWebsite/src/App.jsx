@@ -7,6 +7,7 @@ import SideBar from './components/side_bar/side_bar'
 import Footer from './components/footer/footer'
 import Loader from './components/loader/loader'
 import MainRouter from './routers/main_router'
+import { GET_USER_DATA } from './apis/sender';
 
 function App() {
   const [getTheam, setTheam] = useState("light");
@@ -16,25 +17,39 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleTheme = () => {
-    setTheam((prev) => (prev === 'light' ? 'dark' : 'light'));
-    document.documentElement.setAttribute('data-theme', getTheam);
+    const nextTheme = getTheam === "light" ? "dark" : "light";
+    setTheam(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
   };
 
   const setApplicationDetails = async () => {
-    const user = localStorage.getItem("GoEvent_User");
-    if (user) {
-      setIsUserLoggedIn(true);
-      setUserData(JSON.parse(user));
+    try {
+      const userRes = await GET_USER_DATA();
+      if (userRes && userRes.status == 200 && userRes.success && userRes.data) {
+        setIsUserLoggedIn(true);
+        setUserData(userRes.data);
+        const themeVal = (userRes.data.theam || "LIGHT").toLowerCase();
+        setTheam(themeVal);
+        document.documentElement.setAttribute('data-theme', themeVal);
+      } else {
+        setTheam("light");
+        document.documentElement.setAttribute('data-theme', "light");
+      }
+    } catch (error) {
+      console.error("Error fetching user details: ", error);
+      setTheam("light");
+      document.documentElement.setAttribute('data-theme', "light");
     }
-    document.documentElement.setAttribute('data-theme', getTheam);
-    // --- soon creting
   };
 
   // Sync theme selection to document element for global CSS variables support
   useEffect(() => {
-    setIsLoader(true);
-    setApplicationDetails();
-    setIsLoader(false);
+    const initApp = async () => {
+      setIsLoader(true);
+      await setApplicationDetails();
+      setIsLoader(false);
+    };
+    initApp();
   }, []);
 
   return (
@@ -43,7 +58,7 @@ function App() {
       : <>
         <div className="app-layout">
           <NavBar
-            theme={getTheam} onToggleTheme={toggleTheme} onOpenSidebar={() => setSidebarOpen(true)}
+            theme={getTheam} onToggleTheme={toggleTheme} onOpenSidebar={() => setSidebarOpen(true)} getTheam={getTheam} setTheam={setTheam}
             isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} setUserData={setUserData} getUserData={getUserData}
           />
           <SideBar

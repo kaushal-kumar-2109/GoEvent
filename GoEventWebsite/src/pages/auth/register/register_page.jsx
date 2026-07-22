@@ -14,11 +14,12 @@ export default function RegisterPage({ setIsUserLoggedIn }) {
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   const [errorTag, setErrorTag] = useState("");
-  const [errorMessage, setErrorMessage] = useState("this is an error");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isDataFiled, setIsDataField] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrorTag(""); setErrorMessage("");
     if (!name) {
       setErrorTag("name"); setErrorMessage("Please enter your name"); return;
     }

@@ -1,7 +1,7 @@
 // ------------------------- Package requiring ------------------------- 
 const express = require('express');
 const { CheckUserAuth } = require('../middleware/auth.midleware');
-const { UserEmailVerificationHandler, UserOtpVerifyCreateUserHandler } = require('../handlers/user.handler');
+const { UserEmailVerificationHandler, UserOtpVerifyCreateUserHandler, SetUserLoginHandler } = require('../handlers/user.handler');
 
 const ROUTER = express.Router();
 
@@ -9,5 +9,6 @@ const ROUTER = express.Router();
 // ROUTER.route("/get-user").post(CheckUserAuth, GetUserDataHandler);
 ROUTER.route("/send-otp").post(UserEmailVerificationHandler);
 ROUTER.route("/register-user").post(UserOtpVerifyCreateUserHandler);
+ROUTER.route("/user-login").post(SetUserLoginHandler);
 
 module.exports = ROUTER;

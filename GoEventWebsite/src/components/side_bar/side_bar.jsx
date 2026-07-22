@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getAvatarPath } from '../../utils/avatar_utils';
 import './side_bar.css';
 
-export default function SideBar({ isOpen, onClose, theme, onToggleTheme }) {
+export default function SideBar({ isOpen, onClose, theme, onToggleTheme, isUserLoggedIN, getUserData }) {
 
-  const [navBarIsActive, setNavBarIsActive] = useState("home");
+  const [navBarIsActive, setNavBarIsActive] = useState(() => {
+    const path = window.location.pathname;
+    if (path === "/GoEvent" || path === "/GoEvent/") return "home";
+    if (path.includes("/GoEvent/events")) return "events";
+    if (path.includes("/GoEvent/about")) return "about";
+    if (path.includes("/GoEvent/contact")) return "contact";
+    return "";
+  });
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === "/GoEvent" || path === "/GoEvent/") setNavBarIsActive("home");
+    else if (path.includes("/GoEvent/events")) setNavBarIsActive("events");
+    else if (path.includes("/GoEvent/about")) setNavBarIsActive("about");
+    else if (path.includes("/GoEvent/contact")) setNavBarIsActive("contact");
+    else setNavBarIsActive("");
+  }, []);
   return (
     <div className={`sidebar-wrapper ${isOpen ? 'open' : ''}`}>
       {/* Backdrop overlay */}
@@ -33,10 +50,10 @@ export default function SideBar({ isOpen, onClose, theme, onToggleTheme }) {
 
         {/* Navigation list */}
         <nav className="sidebar-nav">
-          <a href="/GoEvent" onClick={() => setNavBarIsActive("home")} className={navBarIsActive === "home" ? "nav-link active" : "nav-link"}>Home</a>
-          <a href="#events" onClick={() => setNavBarIsActive("events")} className={navBarIsActive === "events" ? "nav-link active" : "nav-link"}>Events</a>
-          <a href="#about" onClick={() => setNavBarIsActive("about")} className={navBarIsActive === "about" ? "nav-link active" : "nav-link"}>About Us</a>
-          <a href="#contact" onClick={() => setNavBarIsActive("contact")} className={navBarIsActive === "contact" ? "nav-link active" : "nav-link"}>Contact</a>
+          <a href="/GoEvent" onClick={() => { setNavBarIsActive("home"); onClose(); }} className={navBarIsActive === "home" ? "nav-link active" : "nav-link"}>Home</a>
+          <a href="/GoEvent/events" onClick={() => { setNavBarIsActive("events"); onClose(); }} className={navBarIsActive === "events" ? "nav-link active" : "nav-link"}>Events</a>
+          <a href="#about" onClick={() => { setNavBarIsActive("about"); onClose(); }} className={navBarIsActive === "about" ? "nav-link active" : "nav-link"}>About Us</a>
+          <a href="#contact" onClick={() => { setNavBarIsActive("contact"); onClose(); }} className={navBarIsActive === "contact" ? "nav-link active" : "nav-link"}>Contact</a>
         </nav>
 
         {/* Divider */}
@@ -67,10 +84,30 @@ export default function SideBar({ isOpen, onClose, theme, onToggleTheme }) {
             </button>
           </div>
 
-          <div className="sidebar-auth-buttons">
-            <a href="/login" className="btn btn-secondary" onClick={onClose}>Log In</a>
-            <a href="/register" className="btn btn-primary" onClick={onClose}>Sign Up</a>
-          </div>
+          {
+            (!isUserLoggedIN) ?
+              <div className="sidebar-auth-buttons">
+                <a href="/login" className="btn btn-secondary" onClick={onClose}>Log In</a>
+                <a href="/register" className="btn btn-primary" onClick={onClose}>Sign Up</a>
+              </div>
+              :
+              <div className="sidebar-profile-card">
+                <div className="sidebar-profile-header">
+                  <img
+                    src={getAvatarPath(getUserData?.avatar)}
+                    alt={getUserData?.name || "Profile"}
+                    className="sidebar-profile-avatar"
+                  />
+                  <div className="sidebar-profile-info">
+                    <span className="sidebar-profile-name">{getUserData?.name || "Profile"}</span>
+                    <span className="sidebar-profile-email">{getUserData?.email || ""}</span>
+                  </div>
+                </div>
+                <a href="/profile" className="btn btn-primary sidebar-profile-btn" onClick={onClose}>
+                  View Profile
+                </a>
+              </div>
+          }
         </div>
       </div>
     </div>

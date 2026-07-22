@@ -1,16 +1,48 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import './login_page.css';
+import { LOGIN_IN } from '../../../apis/sender';
+import { ToastError, ToastSuccess } from '../../../utils/toast_notification';
 
-export default function LoginPage() {
+export default function LoginPage({ setIsUserLoggedIn }) {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [errorTag, setErrorTag] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ email, password, rememberMe });
+    setErrorTag(""); setErrorMessage("");
+
+    if (!email) {
+      setErrorTag("email"); setErrorMessage("Please enter your email"); return;
+    }
+    if (!password) {
+      setErrorTag("password"); setErrorMessage("Please enter your password"); return;
+    }
+
+    const response = await LOGIN_IN({ email, password });
+    if (response.success && response.status === 200) {
+      ToastSuccess(response.message);
+      localStorage.setItem("GoEventUserData", JSON.stringify(response.data));
+      setIsUserLoggedIn(true);
+      navigate("/");
+      return;
+    }
+
+    if (response.tag === "email") {
+      setErrorTag("email"); setErrorMessage("Please enter your email"); return;
+    }
+    if (response.tag === "password") {
+      setErrorTag("password"); setErrorMessage("Please enter your password"); return;
+    }
+    ToastError(response.message);
   };
 
   return (

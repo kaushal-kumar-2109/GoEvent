@@ -10,12 +10,14 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
   const [otpErr, setOtpErr] = useState(false);
   const [timer, setTimer] = useState(180);
   const [canResend, setCanResend] = useState(false);
+  const [getEmail, setEmail] = useState("");
   const navigate = useNavigate();
 
   // Create refs for each input box
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const sendOtp = async () => {
+    setEmail(userData.email);
     const response = await SEND_OTP(userData);
     if (!response.status == 200) {
       ToastError(response.message);
@@ -94,7 +96,6 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
     const otpCode = otp.join('');
     userData.otp = otpCode;
     const response = await SIGN_UP(userData);
-    console.log(response);
     if (response.status !== 200) {
       if (response.tag === "otp") {
         setOtpErr(response.message);
@@ -107,6 +108,7 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
       return;
     }
     ToastSuccess(response.message);
+    localStorage.setItem("GoEventUserData", JSON.stringify(response.data));
     setIsUserLoggedIn(true);
     navigate("/");
 
@@ -132,7 +134,7 @@ export default function VerifyOtpPage({ userData, setIsDataField, setErrorTag, s
               <h2>Verify Your Identity</h2>
               <h3>Just one step away</h3>
               <p>
-                To keep your account safe and secure, we've sent a 6-digit security verification code to your email address. Please enter the code to verify your session.
+                To keep your account safe and secure, we've sent a 6-digit security verification code to your email {getEmail} address. Please enter the code to verify your session.
               </p>
             </div>
 
