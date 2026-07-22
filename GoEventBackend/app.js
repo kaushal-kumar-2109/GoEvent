@@ -11,7 +11,7 @@ const cors = require("cors");
 // ------------------------- initialize express ------------------------- //
 const app = express();
 const apiVersion = process.env.API_VERSION;
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
 
 // ------------------------- app midleware configration ------------------------- 
 app.use(express.json()); // --- express json configration
@@ -45,6 +45,6 @@ app.all("/*path", (req, res) => {
 });
 
 // ------------------------- start server ------------------------- //
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`);
 });
