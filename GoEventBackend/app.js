@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 
 // test router for check
 app.get("/test", (req, res) => {
-    res.json({ status: "success", statusCode: 200, message: "Test server is running", data: null });
+    res.json({ status: "success", statusCode: 200, message: "Test for the server", data: null, reqIp: req.headers["x-forwarded-for"] || req.ip });
 });
 
 // all other invalid route
