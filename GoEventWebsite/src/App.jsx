@@ -10,9 +10,8 @@ import MainRouter from './routers/main_router'
 import { GET_USER_DATA } from './apis/sender';
 
 function App() {
-  const [getTheam, setTheam] = useState("light");
-  const [getUserData, setUserData] = useState({});
   const [isUserLoggedIN, setIsUserLoggedIn] = useState(false);
+  const [getTheam, setTheam] = useState("light");
   const [isLoader, setIsLoader] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -26,9 +25,8 @@ function App() {
     try {
       const userRes = await GET_USER_DATA();
       if (userRes && userRes.status == 200 && userRes.success && userRes.data) {
-        setIsUserLoggedIn(true);
-        setUserData(userRes.data);
         const themeVal = (userRes.data.theam || "LIGHT").toLowerCase();
+        localStorage.setItem("GoEventUserData", JSON.stringify(userRes.data));
         setTheam(themeVal);
         document.documentElement.setAttribute('data-theme', themeVal);
       } else {
@@ -60,33 +58,19 @@ function App() {
         <div className="app-layout">
           <NavBar
             theme={getTheam} onToggleTheme={toggleTheme} onOpenSidebar={() => setSidebarOpen(true)} getTheam={getTheam} setTheam={setTheam}
-            isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} setUserData={setUserData} getUserData={getUserData}
+            isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn}
           />
           <SideBar
             isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} theme={getTheam} onToggleTheme={toggleTheme}
-            isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} setUserData={setUserData} getUserData={getUserData}
+            isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn}
           />
           <main className="main-content">
-            <MainRouter
-              isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} setUserData={setUserData} getUserData={getUserData}
-              getTheam={getTheam} setTheam={setTheam}
-            />
+            <MainRouter getTheam={getTheam} setTheam={setTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />
           </main>
-          <Footer
-            isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} setUserData={setUserData} getUserData={getUserData}
-          />
+          <Footer />
           <ToastContainer
-            position="bottom-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick={false}
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme={getTheam == "light" ? "dark" : "light"}
-            transition={Bounce}
+            position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick={false} rtl={false}
+            pauseOnFocusLoss draggable pauseOnHover theme={getTheam == "light" ? "dark" : "light"} transition={Bounce}
           />
         </div>
       </>

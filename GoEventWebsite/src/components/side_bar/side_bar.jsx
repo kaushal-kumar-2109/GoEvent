@@ -2,7 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { getAvatarPath } from '../../utils/avatar_utils';
 import './side_bar.css';
 
-export default function SideBar({ isOpen, onClose, theme, onToggleTheme, isUserLoggedIN, getUserData }) {
+export default function SideBar({ isUserLoggedIN, setIsUserLoggedIn, isOpen, onClose, theme, onToggleTheme }) {
+
+  const [getUserData, setUserData] = useState({});
+  useEffect(() => {
+    const raw = localStorage.getItem("GoEventUserData");
+    if (raw) {
+      setIsUserLoggedIn(true);
+      setUserData(JSON.parse(raw));
+    }
+  }, []);
 
   const [navBarIsActive, setNavBarIsActive] = useState(() => {
     const path = window.location.pathname;

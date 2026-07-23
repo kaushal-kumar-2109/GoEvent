@@ -6,7 +6,7 @@ import { LOGIN_IN } from '../../../apis/sender';
 import { ToastError, ToastInfo, ToastSuccess } from '../../../utils/toast_notification';
 import { useEffect } from 'react';
 
-export default function LoginPage({ setIsUserLoggedIn }) {
+export default function LoginPage({ isUserLoggedIN, setIsUserLoggedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +14,9 @@ export default function LoginPage({ setIsUserLoggedIn }) {
     const data = JSON.parse(raw);
     if (data?.email && data?.role) {
       ToastInfo("User already logged in");
+      setIsUserLoggedIn(true);
       navigate("/");
+      return;
     }
   }, []);
 

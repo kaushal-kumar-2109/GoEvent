@@ -2,7 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { getAvatarPath } from '../../utils/avatar_utils';
 import './nav_bar.css';
 
-export default function NavBar({ isUserLoggedIN, getUserData, theme, onToggleTheme, onOpenSidebar, getTheam, setTheam }) {
+export default function NavBar({ isUserLoggedIN, setIsUserLoggedIn, onToggleTheme, onOpenSidebar, getTheam }) {
+
+  const [getUserData, setUserData] = useState({});
+  useEffect(() => {
+    const raw = localStorage.getItem("GoEventUserData");
+    if (raw) {
+      setIsUserLoggedIn(true);
+      setUserData(JSON.parse(raw));
+    }
+  }, []);
+
   const [navBarIsActive, setNavBarIsActive] = useState(() => {
     const path = window.location.pathname;
     if (path === "/GoEvent" || path === "/GoEvent/") return "home";

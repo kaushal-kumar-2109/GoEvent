@@ -9,8 +9,10 @@ export default function RegisterPage({ setIsUserLoggedIn }) {
     const raw = localStorage.getItem("GoEventUserData");
     const data = JSON.parse(raw);
     if (data?.email && data?.role) {
+      setIsUserLoggedIn(true);
       ToastInfo("User already logged in");
       navigate("/");
+      return;
     }
   }, []);
   const [showPassword, setShowPassword] = useState(false);

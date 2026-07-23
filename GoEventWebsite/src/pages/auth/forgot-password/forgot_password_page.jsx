@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="auth-container">
       <div className="auth-wrapper">
-        
+
         {/* LEFT PANEL - Welcome & Features (Visible on Desktop) */}
         <div className="auth-left-panel">
           <div className="auth-left-overlay"></div>

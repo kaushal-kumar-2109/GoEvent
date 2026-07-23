@@ -15,10 +15,24 @@ import HelpSupportTab from './help_support_component/help_support_tab';
 import { GET_USER_LOG_OUT } from '../../apis/sender';
 import { ToastSuccess, ToastError } from '../../utils/toast_notification';
 
-export default function ProfilePage({ getTheam, getUserData, setUserData, setIsUserLoggedIn, initialTab = 'overview' }) {
+export default function ProfilePage({ isUserLoggedIN, setIsUserLoggedIn, getTheam, initialTab = 'overview' }) {
   const navigate = useNavigate();
   // Current active tab selection
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Check authentication and load initial user data once on mount
+  const [getUserData, setUserData] = useState({});
+  useEffect(() => {
+    const raw = localStorage.getItem("GoEventUserData");
+    if (raw) {
+      setIsUserLoggedIn(true);
+      setUserData(JSON.parse(raw));
+    } else {
+      navigate("/login");
+      ToastError("Please Login first");
+      return;
+    }
+  }, []);
 
   // Local state for user details, initialized from props or fallback values
   const [userData, setUserDataLocal] = useState({
@@ -32,22 +46,6 @@ export default function ProfilePage({ getTheam, getUserData, setUserData, setIsU
     memberSince: new Date(getUserData?.memberSince).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) || 'N/A',
     role: getUserData?.role || 'N/A',
   });
-
-  // Check authentication and load initial user data once on mount
-  useEffect(() => {
-    const rawUser = localStorage.getItem('GoEventUserData');
-    if (!rawUser) {
-      navigate("/");
-      return;
-    }
-    if ((!getUserData || Object.keys(getUserData).length === 0) && typeof setUserData === 'function') {
-      try {
-        setUserData(JSON.parse(rawUser));
-      } catch (err) {
-        console.error("Failed to parse user data", err);
-      }
-    }
-  }, []);
 
   // Sync local state when getUserData props update
   useEffect(() => {
@@ -64,17 +62,7 @@ export default function ProfilePage({ getTheam, getUserData, setUserData, setIsU
         role: getUserData.role || 'N/A'
       });
     }
-  }, [
-    getUserData?.name,
-    getUserData?.email,
-    getUserData?.phone,
-    getUserData?.location,
-    getUserData?.bio,
-    getUserData?.website,
-    getUserData?.avatar,
-    getUserData?.memberSince,
-    getUserData?.role
-  ]);
+  }, [getUserData?.name, getUserData?.email, getUserData?.phone, getUserData?.location, getUserData?.bio, getUserData?.website, getUserData?.avatar, getUserData?.memberSince, getUserData?.role]);
 
   const handleSaveUserData = (updatedData) => {
     setUserDataLocal(updatedData);
@@ -88,10 +76,8 @@ export default function ProfilePage({ getTheam, getUserData, setUserData, setIsU
 
       const response = await GET_USER_LOG_OUT();
       if (response.success && response.status === 200) {
-        if (typeof setIsUserLoggedIn === 'function') {
-          setIsUserLoggedIn(false);
-        }
         localStorage.removeItem('GoEventUserData');
+        setIsUserLoggedIn(false);
         ToastSuccess(response.message);
         navigate("/GoEvent");
         return;

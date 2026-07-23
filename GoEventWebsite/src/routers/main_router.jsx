@@ -8,44 +8,23 @@ import ForgotPasswordPage from "../pages/auth/forgot-password/forgot_password_pa
 import ProfilePage from "../pages/profile/profile_page";
 import ManageEventPage from "../pages/organizer/manage-event/manage_event_page";
 
-const MainRouter = ({ isUserLoggedIN, setIsUserLoggedIn, setUserData, getUserData, getTheam, setTheam }) => {
+const MainRouter = ({ getTheam, setTheam, isUserLoggedIN, setIsUserLoggedIn }) => {
 
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Navigate to="/GoEvent" replace />} />
                 <Route path="/GoEvent" element={<HomePage getTheam={getTheam} />} />
-                <Route path="/GoEvent/events" element={<EventsPage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} getUserData={getUserData} />} />
+                <Route path="/GoEvent/events" element={<EventsPage getTheam={getTheam} />} />
                 <Route path="/GoEvent/event-details/:eid" element={<EventDetailsPage getTheam={getTheam} />} />
-                <Route path="/login" element={<LoginPage setIsUserLoggedIn={setIsUserLoggedIn} />} />
-                <Route path="/register" element={<RegisterPage setIsUserLoggedIn={setIsUserLoggedIn} />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/profile" element={
-                    <ProfilePage
-                        getTheam={getTheam}
-                        isUserLoggedIN={isUserLoggedIN}
-                        getUserData={getUserData}
-                        setUserData={setUserData}
-                        setIsUserLoggedIn={setIsUserLoggedIn}
-                    />
-                } />
-                <Route path="/GoEvent/create-event" element={
-                    <ProfilePage
-                        getTheam={getTheam}
-                        isUserLoggedIN={isUserLoggedIN}
-                        getUserData={getUserData}
-                        setUserData={setUserData}
-                        setIsUserLoggedIn={setIsUserLoggedIn}
-                        initialTab="create_event"
-                    />
-                } />
-                <Route path="/GoEvent/manage-event/:eid" element={
-                    <ManageEventPage
-                        getTheam={getTheam}
-                        isUserLoggedIN={isUserLoggedIN}
-                        getUserData={getUserData}
-                    />
-                } />
+
+                <Route path="/login" element={<LoginPage isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+                <Route path="/register" element={<RegisterPage isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+
+                <Route path="/profile" element={<ProfilePage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+                <Route path="/GoEvent/create-event" element={<ProfilePage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} initialTab="create_event" />} />
+                <Route path="/GoEvent/manage-event/:eid" element={<ManageEventPage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
             </Routes>
         </BrowserRouter>
     )
