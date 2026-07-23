@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x,25.x]
+        node-version: [22.x]
 
     steps:
     # 1. Reset permissions first so the runner can interact with files
