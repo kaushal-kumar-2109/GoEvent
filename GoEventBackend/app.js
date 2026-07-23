@@ -40,7 +40,7 @@ app.get("/", (req, res) => {
 });
 
 // test router for check
-app.get("/test", (req, res) => {
+app.get("/test-path", (req, res) => {
     res.json({ status: "success", statusCode: 200, message: "Test for the server", data: null, reqIp: req.headers["x-forwarded-for"] || req.ip });
 });
 
