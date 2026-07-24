@@ -17,7 +17,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json()); // --- express json configration
 app.use(express.urlencoded({ extended: true })); // --- express urlencoded configration
 app.use(cors({
-    origin: ["http://localhost:5173", "http://192.168.1.18:3000"],
+    origin: ["http://localhost:5173", "http://192.168.1.18:3000", "https://go-event-xi.vercel.app"],
     credentials: true
 }));
 app.use(cookieParser());
