@@ -1,5 +1,5 @@
-const MAIN_URL = "http://ec2-16-170-208-12.eu-north-1.compute.amazonaws.com:8080" || "http://go-event-backend.duckdns.org:8080";
-const SUB_URL = "/api/v1/goevent";
+const MAIN_URL = import.meta.env.VITE_BACKEND_WEB_API_1 || import.meta.env.VITE_BACKEND_WEB_API_2;
+const SUB_URL = import.meta.env.VITE_BACKEND_WEB_SUB_API;
 
 const APIS = {
     GET_API: {

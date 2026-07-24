@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './register_page.css';
 import VerifyOtpPage from '../verify-otp/verify_otp_page';

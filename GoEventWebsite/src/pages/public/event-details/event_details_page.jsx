@@ -292,53 +292,67 @@ export default function EventDetailsPage() {
                   <div className="timeline-container">
                     <div className="timeline-day-header">Event Program Timeline</div>
                     
-                    <div className="timeline-item">
-                      <div className="timeline-time">10:00 AM</div>
-                      <div className="timeline-content">
-                        <h4>Gates Open & Registrations</h4>
-                        <p>Welcome check-ins, security verification, badge collection, and initial entry.</p>
-                      </div>
-                    </div>
+                    {event.schedule && event.schedule.length > 0 ? (
+                      event.schedule.map((item, idx) => (
+                        <div key={idx} className="timeline-item">
+                          <div className="timeline-time">{item.time}</div>
+                          <div className="timeline-content">
+                            <h4>{item.event}</h4>
+                            <p>{item.description}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="timeline-item">
+                          <div className="timeline-time">10:00 AM</div>
+                          <div className="timeline-content">
+                            <h4>Gates Open & Registrations</h4>
+                            <p>Welcome check-ins, security verification, badge collection, and initial entry.</p>
+                          </div>
+                        </div>
 
-                    <div className="timeline-item">
-                      <div className="timeline-time">11:00 AM</div>
-                      <div className="timeline-content">
-                        <h4>Opening Keynote Session</h4>
-                        <p>Welcome speech, overview of the event topics, schedule, guidelines, and main kickoff.</p>
-                      </div>
-                    </div>
+                        <div className="timeline-item">
+                          <div className="timeline-time">11:00 AM</div>
+                          <div className="timeline-content">
+                            <h4>Opening Keynote Session</h4>
+                            <p>Welcome speech, overview of the event topics, schedule, guidelines, and main kickoff.</p>
+                          </div>
+                        </div>
 
-                    <div className="timeline-item">
-                      <div className="timeline-time">01:00 PM</div>
-                      <div className="timeline-content">
-                        <h4>Lunch & Networking break</h4>
-                        <p>Food courts and cafeteria options become available. Networking in the VIP lounge.</p>
-                      </div>
-                    </div>
+                        <div className="timeline-item">
+                          <div className="timeline-time">01:00 PM</div>
+                          <div className="timeline-content">
+                            <h4>Lunch & Networking break</h4>
+                            <p>Food courts and cafeteria options become available. Networking in the VIP lounge.</p>
+                          </div>
+                        </div>
 
-                    <div className="timeline-item">
-                      <div className="timeline-time">03:00 PM</div>
-                      <div className="timeline-content">
-                        <h4>Special Performance & Panel discussion</h4>
-                        <p>Guest speakers convene for interactive workshops, Q&A sessions, and panels.</p>
-                      </div>
-                    </div>
+                        <div className="timeline-item">
+                          <div className="timeline-time">03:00 PM</div>
+                          <div className="timeline-content">
+                            <h4>Special Performance & Panel discussion</h4>
+                            <p>Guest speakers convene for interactive workshops, Q&A sessions, and panels.</p>
+                          </div>
+                        </div>
 
-                    <div className="timeline-item">
-                      <div className="timeline-time">06:00 PM</div>
-                      <div className="timeline-content">
-                        <h4>Main Headliner Event</h4>
-                        <p>Main performance stage events, central talks, live interactive shows, and festival acts.</p>
-                      </div>
-                    </div>
+                        <div className="timeline-item">
+                          <div className="timeline-time">06:00 PM</div>
+                          <div className="timeline-content">
+                            <h4>Main Headliner Event</h4>
+                            <p>Main performance stage events, central talks, live interactive shows, and festival acts.</p>
+                          </div>
+                        </div>
 
-                    <div className="timeline-item">
-                      <div className="timeline-time">08:00 PM</div>
-                      <div className="timeline-content">
-                        <h4>Closing Ceremony</h4>
-                        <p>Ending notes, giveaways, networking closure, and gate clearance.</p>
-                      </div>
-                    </div>
+                        <div className="timeline-item">
+                          <div className="timeline-time">08:00 PM</div>
+                          <div className="timeline-content">
+                            <h4>Closing Ceremony</h4>
+                            <p>Ending notes, giveaways, networking closure, and gate clearance.</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

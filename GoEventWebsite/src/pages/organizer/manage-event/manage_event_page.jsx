@@ -4,15 +4,13 @@ import { ToastSuccess, ToastError } from '../../../utils/toast_notification';
 import { GET_ORGANIZER_EVENT_DETAILS, UPDATE_EVENT, UPLOAD_IMAGE } from '../../../apis/sender';
 import './manage_event_page.css';
 
-export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData }) {
+export default function ManageEventPage({ getTheam }) {
   const { eid } = useParams();
   const navigate = useNavigate();
-  const userData = getUserData || JSON.parse(localStorage.getItem('GoEventUserData') || '{}');
+  const [getNote, setNote] = useState("");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [dbStatus, setDbStatus] = useState('DRAFT');
 
   // File upload input refs
   const bannerInputRef = useRef(null);
@@ -26,139 +24,105 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
   const [isUploadingQr, setIsUploadingQr] = useState(false);
 
+  const [newSchedule, setNewSchedule] = useState({ time: '', event: '', description: '' });
+  const [editingScheduleIndex, setEditingScheduleIndex] = useState(null);
+
   // Form State
   const [formData, setFormData] = useState({
-    title: '',
-    shortDescription: '',
-    description: '',
-    category: 'Concert & Music',
-    eventType: 'PUBLIC',
-    bannerImage: '',
-    thumbnailImage: '',
-    galleryImages: [],
-    promotionalVideo: '',
-    startDate: '',
-    endDate: '',
-    registrationDeadline: '',
-    venueName: '',
-    address: '',
-    city: '',
-    state: '',
-    country: 'India',
-    pincode: '',
-    googleMapsLink: '',
-    ticketPrice: 0,
-    totalSeats: 0,
-    availableSeats: 0,
-    paymentUPI: '',
-    paymentUPIName: '',
-    paymentQr: '',
-    organizerName: '',
-    contactEmail: '',
-    contactPhone: '',
-    website: '',
-    socialLinks: {
-      instagram: '',
-      facebook: '',
-      linkedin: '',
-      twitter: '',
-      youtube: ''
-    },
-    speakers: [],
-    faqs: [],
-    schedule: [],
-    refundPolicy: '',
-    termsAndConditions: '',
-    status: 'DRAFT'
+    title: '', shortDescription: '', description: '', category: 'Concert & Music', eventType: 'PUBLIC', bannerImage: '', thumbnailImage: '',
+    galleryImages: [], promotionalVideo: '', startDate: '', endDate: '', registrationDeadline: '', venueName: '',
+    address: '', city: '', state: '', country: 'India', pincode: '', googleMapsLink: '', ticketPrice: 0, totalSeats: 0, availableSeats: 0,
+    paymentUPI: '', paymentUPIName: '', paymentQr: '', organizerName: '', contactEmail: '', contactPhone: '', website: '',
+    socialLinks: { instagram: '', facebook: '', linkedin: '', twitter: '', youtube: '' },
+    speakers: [], faqs: [], schedule: [], refundPolicy: '', termsAndConditions: '', status: 'DRAFT'
   });
+
+  const loadEvent = async () => {
+    if (!eid) {
+      ToastError('Invalid Event Reference.');
+      navigate('/profile');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await GET_ORGANIZER_EVENT_DETAILS(eid);
+      if (res.success && res.event) {
+        const ev = res.event;
+        setNote(res.note);
+        const formatDateForInput = (dateStr) => {
+          if (!dateStr) return '';
+          const d = new Date(dateStr);
+          const pad = (num) => String(num).padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        };
+        setFormData({
+          title: ev.title || 'NA',
+          shortDescription: ev.shortDescription || 'NA',
+          description: ev.description || 'NA',
+          category: ev.category || 'NA',
+          eventType: ev.eventType || 'NA',
+          bannerImage: ev.bannerImage || 'NA',
+          thumbnailImage: ev.thumbnailImage || 'NA',
+          galleryImages: ev.galleryImages || 'NA',
+          promotionalVideo: ev.promotionalVideo || 'NA',
+          startDate: formatDateForInput(ev.startDate),
+          endDate: formatDateForInput(ev.endDate),
+          registrationDeadline: formatDateForInput(ev.registrationDeadline),
+          venueName: ev.venueName || 'NA',
+          address: ev.address || 'NA',
+          city: ev.city || 'NA',
+          state: ev.state || 'NA',
+          country: ev.country || 'NA',
+          pincode: ev.pincode || 'NA',
+          googleMapsLink: ev.googleMapsLink || 'NA',
+          ticketPrice: ev.ticketPrice || 0,
+          totalSeats: ev.totalSeats || 0,
+          availableSeats: ev.availableSeats || 0,
+          paymentUPI: ev.paymentUPI || 'NA',
+          paymentUPIName: ev.paymentUPIName || 'NA',
+          paymentQr: ev.paymentQr || 'NA',
+          organizerName: ev.organizerName || 'NA',
+          contactEmail: ev.contactEmail || 'NA',
+          contactPhone: ev.contactPhone || 'NA',
+          website: ev.website || 'NA',
+          socialLinks: {
+            instagram: ev.socialLinks?.instagram || 'NA',
+            facebook: ev.socialLinks?.facebook || 'NA',
+            linkedin: ev.socialLinks?.linkedin || 'NA',
+            twitter: ev.socialLinks?.twitter || 'NA',
+            youtube: ev.socialLinks?.youtube || 'NA'
+          },
+          speakers: ev.speakers || [],
+          faqs: ev.faqs || [],
+          schedule: ev.schedule || [],
+          refundPolicy: ev.refundPolicy || 'NA',
+          termsAndConditions: ev.termsAndConditions || 'NA',
+          status: ev.status || 'NA'
+        });
+      } else {
+        ToastError(res.message || 'Failed to retrieve event.');
+        navigate('/profile');
+      }
+    } catch (err) {
+      console.error(err);
+      ToastError('Error communicating with the database.');
+      navigate('/profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Redirect if not logged in
   useEffect(() => {
-    if (!isUserLoggedIN) {
+    const raw = localStorage.getItem("GoEventUserData");
+    if (!raw) {
       ToastError('Please log in to manage your events.');
       navigate('/login');
     }
-  }, [isUserLoggedIN, navigate]);
+  }, [navigate]);
 
   // Fetch Event Details
   useEffect(() => {
-    const loadEvent = async () => {
-      if (!eid) {
-        ToastError('Invalid Event Reference.');
-        navigate('/profile');
-        return;
-      }
-      setIsLoading(true);
-      try {
-        const res = await GET_ORGANIZER_EVENT_DETAILS(eid);
-        if (res.success && res.event) {
-          const ev = res.event;
-          
-          const formatDateForInput = (dateStr) => {
-            if (!dateStr) return '';
-            const d = new Date(dateStr);
-            const pad = (num) => String(num).padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-          };
-
-          setFormData({
-            title: ev.title || '',
-            shortDescription: ev.shortDescription || '',
-            description: ev.description || '',
-            category: ev.category || 'Concert & Music',
-            eventType: ev.eventType || 'PUBLIC',
-            bannerImage: ev.bannerImage || '',
-            thumbnailImage: ev.thumbnailImage || '',
-            galleryImages: ev.galleryImages || [],
-            promotionalVideo: ev.promotionalVideo || '',
-            startDate: formatDateForInput(ev.startDate),
-            endDate: formatDateForInput(ev.endDate),
-            registrationDeadline: formatDateForInput(ev.registrationDeadline),
-            venueName: ev.venueName || '',
-            address: ev.address || '',
-            city: ev.city || '',
-            state: ev.state || '',
-            country: ev.country || 'India',
-            pincode: ev.pincode || '',
-            googleMapsLink: ev.googleMapsLink || '',
-            ticketPrice: ev.ticketPrice || 0,
-            totalSeats: ev.totalSeats || 0,
-            availableSeats: ev.availableSeats || 0,
-            paymentUPI: ev.paymentUPI || '',
-            paymentUPIName: ev.paymentUPIName || '',
-            paymentQr: ev.paymentQr || '',
-            organizerName: ev.organizerName || '',
-            contactEmail: ev.contactEmail || '',
-            contactPhone: ev.contactPhone || '',
-            website: ev.website || '',
-            socialLinks: {
-              instagram: ev.socialLinks?.instagram || '',
-              facebook: ev.socialLinks?.facebook || '',
-              linkedin: ev.socialLinks?.linkedin || '',
-              twitter: ev.socialLinks?.twitter || '',
-              youtube: ev.socialLinks?.youtube || ''
-            },
-            speakers: ev.speakers || [],
-            faqs: ev.faqs || [],
-            schedule: ev.schedule || [],
-            refundPolicy: ev.refundPolicy || '',
-            termsAndConditions: ev.termsAndConditions || '',
-            status: ev.status || 'DRAFT'
-          });
-          setDbStatus(ev.status || 'DRAFT');
-        } else {
-          ToastError(res.message || 'Failed to retrieve event.');
-          navigate('/profile');
-        }
-      } catch (err) {
-        console.error(err);
-        ToastError('Error communicating with the database.');
-        navigate('/profile');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadEvent();
   }, [eid, navigate]);
 
@@ -166,176 +130,6 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleNestedChange = (parent, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
-    }));
-  };
-
-  // Status check locks
-  const isFieldDisabled = (section, field) => {
-    if (dbStatus === 'DRAFT') {
-      return false; // draft: everything is editable
-    }
-    if (dbStatus === 'PUBLISHED') {
-      if (field === 'ticketPrice') {
-        return true; // published: ticketPrice is locked
-      }
-      return false; // rest can change
-    }
-    if (dbStatus === 'PENDING') {
-      // pending: ONLY location (venueName, address, city, state, country, pincode, googleMapsLink), startDate, endDate, registrationDeadline can change
-      const allowed = [
-        'venueName', 'address', 'city', 'state', 'country', 'pincode', 'googleMapsLink',
-        'startDate', 'endDate', 'registrationDeadline'
-      ];
-      return !allowed.includes(field);
-    }
-    // started, completed, cancelled, deleted: nothing can be changed
-    return true;
-  };
-
-  // Confirm changes from Draft to Published
-  const handleStatusChange = (newStatus) => {
-    if (dbStatus === 'DRAFT' && newStatus === 'PUBLISHED') {
-      const confirmChange = window.confirm(
-        "⚠️ WARNING: Changing Status to PUBLISHED\n\n" +
-        "• Once Published, the Ticket Price cannot be changed anymore.\n" +
-        "• If the event enters Pending status, only location and event dates/deadlines will be editable.\n\n" +
-        "Do you want to proceed with this status change?"
-      );
-      if (!confirmChange) {
-        return;
-      }
-    }
-    handleInputChange('status', newStatus);
-  };
-
-  // Image upload
-  const handleImageUpload = async (e, field) => {
-    const isLocked = isFieldDisabled('media', field === 'qr' ? 'paymentQr' : field === 'banner' ? 'bannerImage' : 'thumbnailImage');
-    if (isLocked) {
-      ToastError('Editing media is locked in this status.');
-      return;
-    }
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const dataObj = new FormData();
-    dataObj.append('file', file);
-
-    if (field === 'banner') setIsUploadingBanner(true);
-    else if (field === 'thumbnail') setIsUploadingThumbnail(true);
-    else if (field === 'qr') setIsUploadingQr(true);
-
-    try {
-      const res = await UPLOAD_IMAGE(dataObj);
-      if (res.success && res.url) {
-        if (field === 'banner') {
-          handleInputChange('bannerImage', res.url);
-          ToastSuccess('Banner uploaded!');
-        } else if (field === 'thumbnail') {
-          handleInputChange('thumbnailImage', res.url);
-          ToastSuccess('Thumbnail uploaded!');
-        } else if (field === 'qr') {
-          handleInputChange('paymentQr', res.url);
-          ToastSuccess('Payment QR Code uploaded!');
-        }
-      } else {
-        ToastError(res.message || 'Upload failed.');
-      }
-    } catch (err) {
-      console.error(err);
-      ToastError('Error uploading image.');
-    } finally {
-      if (field === 'banner') setIsUploadingBanner(false);
-      else if (field === 'thumbnail') setIsUploadingThumbnail(false);
-      else if (field === 'qr') setIsUploadingQr(false);
-    }
-  };
-
-  const handleGalleryUpload = async (e) => {
-    if (isFieldDisabled('media', 'galleryImages')) {
-      ToastError('Editing gallery photos is locked.');
-      return;
-    }
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setIsUploadingGallery(true);
-    let successCount = 0;
-    const uploadedUrls = [];
-
-    for (const file of files) {
-      const dataObj = new FormData();
-      dataObj.append('file', file);
-      try {
-        const res = await UPLOAD_IMAGE(dataObj);
-        if (res.success && res.url) {
-          uploadedUrls.push(res.url);
-          successCount++;
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    if (successCount > 0) {
-      setFormData(prev => ({
-        ...prev,
-        galleryImages: [...prev.galleryImages, ...uploadedUrls]
-      }));
-      ToastSuccess(`Uploaded ${successCount} gallery images!`);
-    } else {
-      ToastError('Failed to upload gallery images.');
-    }
-    setIsUploadingGallery(false);
-  };
-
-  const handleRemoveGalleryImage = (indexToRemove) => {
-    if (isFieldDisabled('media', 'galleryImages')) {
-      ToastError('Editing gallery photos is locked.');
-      return;
-    }
-    setFormData(prev => ({
-      ...prev,
-      galleryImages: prev.galleryImages.filter((_, idx) => idx !== indexToRemove)
-    }));
-    ToastSuccess('Removed gallery image.');
-  };
-
-  const handleUpdateSubmit = async () => {
-    if (!formData.title.trim()) return ToastError('Event Title is required!');
-    if (!formData.shortDescription.trim()) return ToastError('Short Description is required!');
-    if (!formData.description.trim()) return ToastError('Detailed Description is required!');
-    if (!formData.category) return ToastError('Category is required!');
-    if (!formData.bannerImage) return ToastError('Event Banner Image is required!');
-    if (!formData.startDate) return ToastError('Start Date is required!');
-    if (!formData.endDate) return ToastError('End Date is required!');
-    if (new Date(formData.startDate) >= new Date(formData.endDate)) {
-      return ToastError('End date must be after start date!');
-    }
-
-    setIsSaving(true);
-    try {
-      const res = await UPDATE_EVENT(eid, formData);
-      if (res.success) {
-        ToastSuccess('🎉 Event updated successfully!');
-        navigate('/profile');
-      } else {
-        ToastError(res.message || 'Failed to update event.');
-      }
-    } catch (err) {
-      console.error(err);
-      ToastError('Error saving event updates.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleNextStep = () => {
     if (currentStep < 6) setCurrentStep(prev => prev + 1);
@@ -363,8 +157,6 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
     );
   }
 
-  const isPendingStatus = dbStatus === 'PENDING';
-  const isLockedStatus = dbStatus !== 'DRAFT' && dbStatus !== 'PUBLISHED' && dbStatus !== 'PENDING';
 
   return (
     <div className={`manage-page-wrapper theme-${getTheam}`}>
@@ -380,29 +172,21 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
           <span className="navbar-separator">/</span>
           <span className="navbar-page-title">Manage Event</span>
         </div>
-        <div className="navbar-actions-wrap">
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/profile')}>
-            Cancel & Exit
-          </button>
-          {!isLockedStatus && (
-            <button type="button" className="btn btn-primary btn-sm" onClick={handleUpdateSubmit} disabled={isSaving}>
-              {isSaving ? 'Save & Exit' : 'Save & Exit'}
+        {(formData.status != "STARTED" || formData.status != "COMPLETED" || formData.status != "CENCELLED" || formData.status != "DELETED") &&
+          <div className="navbar-actions-wrap">
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/profile')}>
+              Cancel & Exit
             </button>
-          )}
-        </div>
+            <button type="button" className="btn btn-primary btn-sm">
+              Save & Exit
+            </button>
+          </div>
+        }
       </header>
 
-      {/* Warning Banners */}
-      {isPendingStatus && (
-        <div className="manage-alert-banner pending-warning">
-          <strong>⚠️ Pending Status lock:</strong> Only location, event dates, and registration deadline can be edited.
-        </div>
-      )}
-      {isLockedStatus && (
-        <div className="manage-alert-banner locked-warning">
-          <strong>🚫 Read-Only mode:</strong> This event is in <strong>{dbStatus}</strong> status and cannot be edited.
-        </div>
-      )}
+      <div className="manage-alert-banner pending-warning">
+        <strong>⚠️ {formData.status} Status lock:</strong> {getNote}
+      </div>
 
       {/* Stepper Progress Section */}
       <div className="manage-stepper-container">
@@ -454,8 +238,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       maxLength={100}
                       value={formData.title}
                       onChange={e => handleInputChange('title', e.target.value)}
-                      disabled={isFieldDisabled('basic', 'title')}
+                      disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                      title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update title 'Update Time Over'." : 'Enter your event title'}
                     />
+                    {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                   </div>
 
                   <div className="form-group">
@@ -464,7 +250,8 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       className="form-select"
                       value={formData.category}
                       onChange={e => handleInputChange('category', e.target.value)}
-                      disabled={isFieldDisabled('basic', 'category')}
+                      disabled={(formData.status != "DRAFT")}
+                      title={(formData.status != "DRAFT") ? "You can't update category 'Update Time Over'." : 'Select your event category'}
                     >
                       <option value="Concert & Music">Concert & Music</option>
                       <option value="Comedy & Entertainment">Comedy & Entertainment</option>
@@ -473,7 +260,9 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       <option value="Workshop & Education">Workshop & Education</option>
                       <option value="Sports & Fitness">Sports & Fitness</option>
                     </select>
+                    {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                   </div>
+
                 </div>
 
                 <div className="form-group">
@@ -484,8 +273,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     maxLength={150}
                     value={formData.shortDescription}
                     onChange={e => handleInputChange('shortDescription', e.target.value)}
-                    disabled={isFieldDisabled('basic', 'shortDescription')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update short description 'Update Time Over'." : 'Enter your short description'}
                   />
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -494,16 +285,19 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-textarea rich-editor-textarea"
                     value={formData.description}
                     onChange={e => handleInputChange('description', e.target.value)}
-                    disabled={isFieldDisabled('basic', 'description')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update description 'Update Time Over'." : 'Enter your description'}
                   ></textarea>
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Event Access Type</label>
                   <div className="event-type-grid">
                     <div
-                      className={`event-type-card ${formData.eventType === 'PUBLIC' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
-                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'PUBLIC')}
+                      className={`event-type-card ${formData.eventType === 'PUBLIC' ? 'selected' : ''} ${(formData.status != "DRAFT") ? 'disabled-card' : ''}`}
+                      onClick={() => handleInputChange('eventType', 'PUBLIC')}
+                      title={(formData.status != "DRAFT") ? "You can't update event type 'Update Time Over'." : 'Enter your event type'}
                     >
                       <div className="event-type-icon">🌐</div>
                       <div className="event-type-meta">
@@ -513,8 +307,9 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     </div>
 
                     <div
-                      className={`event-type-card ${formData.eventType === 'PRIVATE' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
-                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'PRIVATE')}
+                      className={`event-type-card ${formData.eventType === 'PRIVATE' ? 'selected' : ''} ${(formData.status != "DRAFT") ? 'disabled-card' : ''}`}
+                      onClick={() => handleInputChange('eventType', 'PRIVATE')}
+                      title={(formData.status != "DRAFT") ? "You can't update event type 'Update Time Over'." : 'Enter your event type'}
                     >
                       <div className="event-type-icon">🔒</div>
                       <div className="event-type-meta">
@@ -524,8 +319,9 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     </div>
 
                     <div
-                      className={`event-type-card ${formData.eventType === 'ALL' ? 'selected' : ''} ${isFieldDisabled('basic', 'eventType') ? 'disabled-card' : ''}`}
-                      onClick={() => !isFieldDisabled('basic', 'eventType') && handleInputChange('eventType', 'ALL')}
+                      className={`event-type-card ${formData.eventType === 'ALL' ? 'selected' : ''} ${(formData.status != "DRAFT") ? 'disabled-card' : ''}`}
+                      onClick={() => handleInputChange('eventType', 'ALL')}
+                      title={(formData.status != "DRAFT") ? "You can't update event type 'Update Time Over'." : 'Enter your event type'}
                     >
                       <div className="event-type-icon">👥</div>
                       <div className="event-type-meta">
@@ -533,6 +329,7 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       </div>
                     </div>
                   </div>
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
               </div>
 
@@ -549,8 +346,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       className="form-input"
                       value={formData.organizerName}
                       onChange={e => handleInputChange('organizerName', e.target.value)}
-                      disabled={isFieldDisabled('organizer', 'organizerName')}
+                      disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                      title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update organizer name 'Update Time Over'." : 'Enter your organizer name'}
                     />
+                    {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                   </div>
 
                   <div className="form-group">
@@ -560,8 +359,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       className="form-input"
                       value={formData.contactEmail}
                       onChange={e => handleInputChange('contactEmail', e.target.value)}
-                      disabled={isFieldDisabled('organizer', 'contactEmail')}
+                      disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                      title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update contact email 'Update Time Over'." : 'Enter your contact email'}
                     />
+                    {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                   </div>
                 </div>
               </div>
@@ -584,7 +385,6 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.startDate}
                     onChange={e => handleInputChange('startDate', e.target.value)}
-                    disabled={isFieldDisabled('schedule', 'startDate')}
                   />
                 </div>
 
@@ -595,7 +395,6 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.endDate}
                     onChange={e => handleInputChange('endDate', e.target.value)}
-                    disabled={isFieldDisabled('schedule', 'endDate')}
                   />
                 </div>
               </div>
@@ -607,7 +406,6 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                   className="form-input"
                   value={formData.registrationDeadline}
                   onChange={e => handleInputChange('registrationDeadline', e.target.value)}
-                  disabled={isFieldDisabled('schedule', 'registrationDeadline')}
                 />
               </div>
             </div>
@@ -629,8 +427,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.venueName}
                     onChange={e => handleInputChange('venueName', e.target.value)}
-                    disabled={isFieldDisabled('location', 'venueName')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update venue name 'Update Time Over'." : 'Enter your venue name'}
                   />
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -640,8 +440,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.city}
                     onChange={e => handleInputChange('city', e.target.value)}
-                    disabled={isFieldDisabled('location', 'city')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update city 'Update Time Over'." : 'Enter your city'}
                   />
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -651,8 +453,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.state}
                     onChange={e => handleInputChange('state', e.target.value)}
-                    disabled={isFieldDisabled('location', 'state')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update state 'Update Time Over'." : 'Enter your state'}
                   />
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -662,8 +466,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.pincode}
                     onChange={e => handleInputChange('pincode', e.target.value)}
-                    disabled={isFieldDisabled('location', 'pincode')}
+                    disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                    title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update pincode 'Update Time Over'." : 'Enter your pincode'}
                   />
+                  {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
               </div>
 
@@ -673,8 +479,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                   className="form-textarea"
                   value={formData.address}
                   onChange={e => handleInputChange('address', e.target.value)}
-                  disabled={isFieldDisabled('location', 'address')}
+                  disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                  title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update address 'Update Time Over'." : 'Enter your address'}
                 ></textarea>
+                {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
               </div>
 
               <div className="form-group">
@@ -684,8 +492,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                   className="form-input"
                   value={formData.googleMapsLink}
                   onChange={e => handleInputChange('googleMapsLink', e.target.value)}
-                  disabled={isFieldDisabled('location', 'googleMapsLink')}
+                  disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                  title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update google maps link 'Update Time Over'." : 'Enter your google maps link'}
                 />
+                {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
               </div>
             </div>
           )}
@@ -695,9 +505,7 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
             <div className="form-section-card">
               <div className="section-card-header">
                 <h3 className="section-card-title">Tickets & Seat Allocation</h3>
-                {dbStatus === 'PUBLISHED' && (
-                  <p className="status-warning-inline">Ticket price is locked after the event is published.</p>
-                )}
+                {(formData.status != "DRAFT") && <span className='bloked-field'>Section Blocked 🚫</span>}
               </div>
 
               <div className="form-grid-3">
@@ -708,8 +516,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.ticketPrice}
                     onChange={e => handleInputChange('ticketPrice', Number(e.target.value))}
-                    disabled={isFieldDisabled('tickets', 'ticketPrice')}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update ticket price 'Update Time Over'." : 'Enter your ticket price'}
                   />
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -719,8 +529,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.totalSeats}
                     onChange={e => handleInputChange('totalSeats', Number(e.target.value))}
-                    disabled={isFieldDisabled('tickets', 'totalSeats')}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update total seats 'Update Time Over'." : 'Enter your total seats'}
                   />
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -730,8 +542,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.availableSeats}
                     onChange={e => handleInputChange('availableSeats', Number(e.target.value))}
-                    disabled={isFieldDisabled('tickets', 'availableSeats')}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update available seats 'Update Time Over'." : 'Enter your available seats'}
                   />
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
               </div>
 
@@ -743,8 +557,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.paymentUPI}
                     onChange={e => handleInputChange('paymentUPI', e.target.value)}
-                    disabled={isFieldDisabled('tickets', 'paymentUPI')}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update payment UPI ID 'Update Time Over'." : 'Enter your payment UPI ID'}
                   />
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
 
                 <div className="form-group">
@@ -754,8 +570,10 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                     className="form-input"
                     value={formData.paymentUPIName}
                     onChange={e => handleInputChange('paymentUPIName', e.target.value)}
-                    disabled={isFieldDisabled('tickets', 'paymentUPIName')}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update UPI Payee Name 'Update Time Over'." : 'Enter your UPI Payee Name'}
                   />
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 </div>
               </div>
 
@@ -767,21 +585,22 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                   style={{ display: 'none' }}
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e, 'qr')}
-                  disabled={isFieldDisabled('tickets', 'paymentQr')}
+                  disabled={(formData.status != "DRAFT")}
+                  title={(formData.status != "DRAFT") ? "You can't update payment QR code 'Update Time Over'." : 'Upload your payment QR code'}
                 />
+                {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
                 {formData.paymentQr && !isUploadingQr ? (
                   <div className="uploaded-qr-container">
                     <img src={formData.paymentQr} alt="Payment QR" className="qr-preview-thumb" />
-                    {!isFieldDisabled('tickets', 'paymentQr') && (
-                      <button type="button" className="btn btn-secondary btn-xs mt-1" onClick={() => qrInputRef.current.click()}>
-                        Change QR Code
-                      </button>
-                    )}
+
+                    <button type="button" className="btn btn-secondary btn-xs mt-1" onClick={() => qrInputRef.current.click()}>
+                      Change QR Code
+                    </button>
                   </div>
                 ) : (
-                  <div 
-                    className={`upload-dropzone qr-upload ${isFieldDisabled('tickets', 'paymentQr') ? 'disabled-drop' : ''}`} 
-                    onClick={() => !isFieldDisabled('tickets', 'paymentQr') && qrInputRef.current.click()}
+                  <div
+                    className={`upload-dropzone qr-upload ${'disabled-drop'}`}
+                    onClick={() => qrInputRef.current.click()}
                   >
                     <div className="upload-icon-circle">
                       {isUploadingQr ? <div className="spinner"></div> : '📱'}
@@ -795,42 +614,174 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
 
           {/* STEP 5: Additional Details */}
           {currentStep === 5 && (
-            <div className="form-section-card">
-              <div className="section-card-header">
-                <h3 className="section-card-title">Additional Policies & Info</h3>
+            <>
+              <div className="form-section-card">
+                <div className="section-card-header">
+                  <h3 className="section-card-title">Additional Policies & Info</h3>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Promotional Video URL</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={formData.promotionalVideo}
+                    onChange={e => handleInputChange('promotionalVideo', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Refund Policy</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.refundPolicy}
+                    onChange={e => handleInputChange('refundPolicy', e.target.value)}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update refund policy 'Update Time Over'." : 'Enter your refund policy'}
+                  ></textarea>
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Terms & Conditions</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.termsAndConditions}
+                    onChange={e => handleInputChange('termsAndConditions', e.target.value)}
+                    disabled={(formData.status != "DRAFT")}
+                    title={(formData.status != "DRAFT") ? "You can't update terms and conditions 'Update Time Over'." : 'Enter your terms and conditions'}
+                  ></textarea>
+                  {(formData.status != "DRAFT") && <span className='bloked-field'>blocked 🚫</span>}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Promotional Video URL</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={formData.promotionalVideo}
-                  onChange={e => handleInputChange('promotionalVideo', e.target.value)}
-                  disabled={isFieldDisabled('additional', 'promotionalVideo')}
-                />
-              </div>
+              {/* Event Schedule Timeline Builder Card */}
+              <div className="form-section-card schedule-builder-card">
+                <div className="section-card-header">
+                  <h3 className="section-card-title">Event Schedule & Agenda</h3>
+                  <p className="section-card-subtitle">Create a timeline program for your event. Add sessions, timings, and brief details.</p>
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Refund Policy</label>
-                <textarea
-                  className="form-textarea"
-                  value={formData.refundPolicy}
-                  onChange={e => handleInputChange('refundPolicy', e.target.value)}
-                  disabled={isFieldDisabled('additional', 'refundPolicy')}
-                ></textarea>
-              </div>
 
-              <div className="form-group">
-                <label className="form-label">Terms & Conditions</label>
-                <textarea
-                  className="form-textarea"
-                  value={formData.termsAndConditions}
-                  onChange={e => handleInputChange('termsAndConditions', e.target.value)}
-                  disabled={isFieldDisabled('additional', 'termsAndConditions')}
-                ></textarea>
+                <div className="schedule-form-wrapper">
+                  <div className="form-grid-3">
+                    <div className="form-group">
+                      <label className="form-label">Session Time <span className="required-star">*</span></label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 10:00 AM or 11:30 AM - 01:00 PM"
+                        value={newSchedule.time}
+                        onChange={e => setNewSchedule(prev => ({ ...prev, time: e.target.value }))}
+                        disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                        title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update session time 'Update Time Over'." : 'Enter your session time'}
+                      />
+                      {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label">Session / Event Title <span className="required-star">*</span></label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Opening Keynote & Speaker Introduction"
+                        value={newSchedule.event}
+                        onChange={e => setNewSchedule(prev => ({ ...prev, event: e.target.value }))}
+                        disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                        title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update session title 'Update Time Over'." : 'Enter your session title'}
+                      />
+                      {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
+                    </div>
+                  </div>
+
+                  <div className="form-group mt-2">
+                    <label className="form-label">Session Description <span className="required-star">*</span></label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="Briefly describe what will happen during this session..."
+                      rows={2}
+                      value={newSchedule.description}
+                      onChange={e => setNewSchedule(prev => ({ ...prev, description: e.target.value }))}
+                      disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                      title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update session description 'Update Time Over'." : 'Enter your session description'}
+                    ></textarea>
+                    {(formData.status != "DRAFT" && formData.status != "PUBLISHED") && <span className='bloked-field'>blocked 🚫</span>}
+                  </div>
+
+                  {(formData.status === "DRAFT" || formData.status === "PUBLISHED") &&
+                    <div className="schedule-form-actions mt-2" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                      {editingScheduleIndex !== null && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => {
+                            setEditingScheduleIndex(null);
+                            setNewSchedule({ time: '', event: '', description: '' });
+                          }}
+                          disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+                          title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "You can't update session title 'Update Time Over'." : 'Enter your session title'}
+                        >
+                          Cancel Edit
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                      >
+                        {editingScheduleIndex !== null ? '✏️ Update Session' : '＋ Add Session to Schedule'}
+                      </button>
+                    </div>
+                  }
+
+                </div>
+
+                {(formData.status != "DRAFT" && formData.status != "PUBLISHED") &&
+                  <div className="schedule-locked-notice" style={{ padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-tag)', color: 'var(--text-muted)', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🔒</span>
+                    <span className='bloked-field'>Editing event schedule is locked in this event status.</span>
+                  </div>
+                }
+
+
+                {formData.schedule && formData.schedule.length > 0 && (
+                  <div className="schedule-list-wrapper mt-3">
+                    <h4 className="tips-title">Current Program Agenda ({formData.schedule.length})</h4>
+                    <div className="schedule-preview-timeline">
+                      {formData.schedule.map((item, idx) => (
+                        <div key={idx} className={`schedule-preview-item ${editingScheduleIndex === idx ? 'editing' : ''}`}>
+                          <div className="schedule-preview-time-badge">{item.time}</div>
+                          <div className="schedule-preview-info">
+                            <h5>{item.event}</h5>
+                            <p>{item.description}</p>
+                          </div>
+
+                          {(formData.status === "DRAFT" || formData.status === "PUBLISHED") &&
+                            <div className="schedule-preview-actions">
+                              <button
+                                type="button"
+                                className="action-icon-btn edit-btn"
+                                title="Edit Session"
+                                onClick={() => handleEditSchedule(idx)}
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                className="action-icon-btn delete-btn"
+                                title="Delete Session"
+                                onClick={() => handleRemoveSchedule(idx)}
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          }
+
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            </>
           )}
 
           {/* STEP 6: Review & Status Adjustments */}
@@ -844,28 +795,9 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                 <p><strong>Title:</strong> {formData.title || 'Untitled Event'}</p>
                 <p><strong>Category:</strong> {formData.category}</p>
                 <p><strong>Price:</strong> ₹{formData.ticketPrice}</p>
-                <p><strong>Database Status:</strong> <span className={`preview-status-badge status-${dbStatus.toLowerCase()}`}>{dbStatus}</span></p>
+                <p><strong>Database Status:</strong> <span className={`preview-status-badge status-${formData.status.toLowerCase()}`}></span></p>
               </div>
 
-              {!isLockedStatus && (
-                <div className="form-group mt-3">
-                  <label className="form-label font-bold">Change Event Status</label>
-                  <select
-                    className="form-select"
-                    value={formData.status}
-                    onChange={e => handleStatusChange(e.target.value)}
-                    disabled={dbStatus !== 'DRAFT'}
-                  >
-                    <option value="DRAFT">Draft</option>
-                    <option value="PUBLISHED">Published</option>
-                  </select>
-                  {dbStatus === 'DRAFT' && (
-                    <p className="form-help-text mt-1 text-muted">
-                      Moving status to <strong>Published</strong> enables the payment checks and locks edit details fields.
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
@@ -885,13 +817,7 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                 <button type="button" className="btn btn-primary" onClick={handleNextStep}>
                   Next
                 </button>
-              ) : (
-                !isLockedStatus && (
-                  <button type="button" className="btn btn-primary" onClick={handleUpdateSubmit} disabled={isSaving}>
-                    {isSaving ? 'Saving Changes...' : 'Save & Exit'}
-                  </button>
-                )
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -906,21 +832,22 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
               style={{ display: 'none' }}
               accept="image/*"
               onChange={(e) => handleImageUpload(e, 'banner')}
-              disabled={isFieldDisabled('media', 'bannerImage')}
+              disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+              title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "Event is locked, cannot upload image" : "Upload image"}
             />
             {formData.bannerImage && !isUploadingBanner ? (
               <div className="uploaded-image-container">
                 <img src={formData.bannerImage} alt="Banner" className="image-preview-thumb" />
-                {!isFieldDisabled('media', 'bannerImage') && (
+                {(formData.status != "DRAFT" || formData.status != "PUBLISHED") &&
                   <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => bannerInputRef.current.click()}>
                     Change Banner
                   </button>
-                )}
+                }
               </div>
             ) : (
-              <div 
-                className={`upload-dropzone ${isFieldDisabled('media', 'bannerImage') ? 'disabled-drop' : ''}`} 
-                onClick={() => !isFieldDisabled('media', 'bannerImage') && bannerInputRef.current.click()}
+              <div
+                className={`upload-dropzone ${'disabled-drop'}`}
+                onClick={() => bannerInputRef.current.click()}
               >
                 <div className="upload-icon-circle">
                   {isUploadingBanner ? <div className="spinner"></div> : '📷'}
@@ -936,21 +863,23 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
               style={{ display: 'none' }}
               accept="image/*"
               onChange={(e) => handleImageUpload(e, 'thumbnail')}
-              disabled={isFieldDisabled('media', 'thumbnailImage')}
+              disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+              title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "Event is locked, cannot upload image" : "Upload image"}
             />
             {formData.thumbnailImage && !isUploadingThumbnail ? (
               <div className="uploaded-image-container">
                 <img src={formData.thumbnailImage} alt="Thumbnail" className="image-preview-thumb" />
-                {!isFieldDisabled('media', 'thumbnailImage') && (
+                {(formData.status != "DRAFT" || formData.status != "PUBLISHED") &&
                   <button type="button" className="btn btn-secondary btn-xs change-image-btn" onClick={() => thumbnailInputRef.current.click()}>
                     Change Thumbnail
                   </button>
-                )}
+                }
+
               </div>
             ) : (
-              <div 
-                className={`upload-dropzone ${isFieldDisabled('media', 'thumbnailImage') ? 'disabled-drop' : ''}`} 
-                onClick={() => !isFieldDisabled('media', 'thumbnailImage') && thumbnailInputRef.current.click()}
+              <div
+                className={`upload-dropzone ${'disabled-drop'}`}
+                onClick={() => thumbnailInputRef.current.click()}
               >
                 <div className="upload-icon-circle">
                   {isUploadingThumbnail ? <div className="spinner"></div> : '🖼️'}
@@ -966,23 +895,26 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
               style={{ display: 'none' }}
               accept="image/*"
               multiple
-              onChange={handleGalleryUpload}
-              disabled={isFieldDisabled('media', 'galleryImages')}
+              disabled={(formData.status != "DRAFT" && formData.status != "PUBLISHED")}
+              title={(formData.status != "DRAFT" && formData.status != "PUBLISHED") ? "Event is locked, cannot upload image" : "Upload image"}
             />
             <div className="gallery-section">
               <div className="gallery-grid">
                 {formData.galleryImages.map((img, idx) => (
                   <div key={idx} className="gallery-item-wrap">
                     <img src={img} alt={`Gallery ${idx}`} className="gallery-img-thumb" />
-                    {!isFieldDisabled('media', 'galleryImages') && (
+
+                    {(formData.status != "DRAFT" && formData.status != "PUBLISHED") &&
                       <button type="button" className="gallery-remove-btn" onClick={() => handleRemoveGalleryImage(idx)}>
                         ×
                       </button>
-                    )}
+                    }
+
                   </div>
                 ))}
-                {!isFieldDisabled('media', 'galleryImages') && (
+                {
                   !isUploadingGallery ? (
+                    (formData.status != "DRAFT" || formData.status != "PUBLISHED") &&
                     <div className="gallery-add-card" onClick={() => galleryInputRef.current.click()}>
                       <span className="plus-sign">+</span>
                     </div>
@@ -991,7 +923,7 @@ export default function ManageEventPage({ getTheam, isUserLoggedIN, getUserData 
                       <div className="spinner sm"></div>
                     </div>
                   )
-                )}
+                }
               </div>
             </div>
           </div>

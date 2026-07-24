@@ -24,7 +24,7 @@ const MainRouter = ({ getTheam, setTheam, isUserLoggedIN, setIsUserLoggedIn }) =
 
                 <Route path="/profile" element={<ProfilePage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
                 <Route path="/GoEvent/create-event" element={<ProfilePage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} initialTab="create_event" />} />
-                <Route path="/GoEvent/manage-event/:eid" element={<ManageEventPage getTheam={getTheam} isUserLoggedIN={isUserLoggedIN} setIsUserLoggedIn={setIsUserLoggedIn} />} />
+                <Route path="/GoEvent/manage-event/:eid" element={<ManageEventPage getTheam={getTheam} />} />
             </Routes>
         </BrowserRouter>
     )

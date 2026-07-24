@@ -14,10 +14,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 32px;
-  background-color: var(--bg-surface);
+  background-color: black;
   border-bottom: 1px solid var(--border-color);
   position: sticky;
-  top: 0;
+  top: 80px;
   z-index: 100;
 }
 
@@ -43,7 +43,7 @@
 }
 
 .navbar-page-title {
-  color: var(--text-primary);
+  color: white;
   font-size: 16px;
   font-weight: 600;
 }
@@ -215,4 +215,158 @@
   cursor: not-allowed !important;
   border-color: var(--border-color) !important;
   transform: none !important;
+}
+
+/* ==========================================================================
+   SCHEDULE TIMELINE BUILDER STYLES
+   ========================================================================== */
+
+.schedule-builder-card {
+  margin-top: var(--space-2);
+}
+
+.schedule-form-wrapper {
+  background-color: var(--bg-tag);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: background-color var(--transition-normal);
+}
+
+.schedule-list-wrapper {
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-3);
+}
+
+.schedule-preview-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  margin-top: 16px;
+  padding-left: 20px;
+}
+
+.schedule-preview-timeline::before {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: var(--primary-light-hover);
+}
+
+.schedule-preview-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.schedule-preview-item:hover {
+  border-color: var(--primary-color);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-preview-item.editing {
+  border-color: var(--warning-color);
+  background-color: rgba(255, 176, 58, 0.05);
+}
+
+.schedule-preview-item::before {
+  content: '';
+  position: absolute;
+  left: -17px;
+  top: 22px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  border: 2px solid var(--bg-card);
+  z-index: 1;
+  transition: background-color var(--transition-fast);
+}
+
+.schedule-preview-item.editing::before {
+  background-color: var(--warning-color);
+}
+
+.schedule-preview-time-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.schedule-preview-item.editing .schedule-preview-time-badge {
+  color: var(--warning-color);
+  background-color: rgba(255, 176, 58, 0.15);
+}
+
+.schedule-preview-info {
+  flex: 1;
+}
+
+.schedule-preview-info h5 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 4px;
+}
+
+.schedule-preview-info p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.schedule-preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-icon-btn {
+  background: var(--bg-tag);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all var(--transition-fast);
+}
+
+.action-icon-btn:hover {
+  background-color: var(--primary-light-hover);
+  border-color: var(--primary-color);
+}
+
+.action-icon-btn.delete-btn:hover {
+  background-color: rgba(255, 75, 75, 0.1);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+
+.bloked-field {
+  width: 100%;
+  color: #a63535;
+  text-align: end;
+  font-size: smaller;
 }

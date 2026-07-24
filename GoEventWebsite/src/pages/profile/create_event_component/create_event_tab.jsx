@@ -6,6 +6,8 @@ import './create_event_tab.css';
 export default function CreateEventTab({ userData, onTabChange }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newSchedule, setNewSchedule] = useState({ time: '', event: '', description: '' });
+  const [editingScheduleIndex, setEditingScheduleIndex] = useState(null);
 
   // File upload input refs
   const bannerInputRef = useRef(null);
@@ -92,6 +94,56 @@ export default function CreateEventTab({ userData, onTabChange }) {
         [field]: value
       }
     }));
+  };
+
+  const handleAddSchedule = () => {
+    if (!newSchedule.time.trim()) {
+      ToastError('Session time is required!');
+      return;
+    }
+    if (!newSchedule.event.trim()) {
+      ToastError('Session title is required!');
+      return;
+    }
+    if (!newSchedule.description.trim()) {
+      ToastError('Session description is required!');
+      return;
+    }
+
+    if (editingScheduleIndex !== null) {
+      setFormData(prev => {
+        const updated = [...prev.schedule];
+        updated[editingScheduleIndex] = { ...newSchedule };
+        return { ...prev, schedule: updated };
+      });
+      setEditingScheduleIndex(null);
+      ToastSuccess('Session updated successfully!');
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        schedule: [...(prev.schedule || []), { ...newSchedule }]
+      }));
+      ToastSuccess('Session added to schedule!');
+    }
+    setNewSchedule({ time: '', event: '', description: '' });
+  };
+
+  const handleEditSchedule = (index) => {
+    const item = formData.schedule[index];
+    setNewSchedule({ ...item });
+    setEditingScheduleIndex(index);
+  };
+
+  const handleRemoveSchedule = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      schedule: prev.schedule.filter((_, idx) => idx !== index)
+    }));
+    if (editingScheduleIndex === index) {
+      setEditingScheduleIndex(null);
+      setNewSchedule({ time: '', event: '', description: '' });
+    }
+    ToastSuccess('Session removed from schedule.');
   };
 
   // Upload Handler
@@ -693,41 +745,144 @@ export default function CreateEventTab({ userData, onTabChange }) {
 
           {/* STEP 5: Additional Details */}
           {currentStep === 5 && (
-            <div className="form-section-card">
-              <div className="section-card-header">
-                <h3 className="section-card-title">Additional Policies & Info</h3>
-                <p className="section-card-subtitle">Set refund rules, terms & conditions, and promotional videos.</p>
+            <>
+              <div className="form-section-card">
+                <div className="section-card-header">
+                  <h3 className="section-card-title">Additional Policies & Info</h3>
+                  <p className="section-card-subtitle">Set refund rules, terms & conditions, and promotional videos.</p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Promotional Video URL (YouTube / Vimeo)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="https://youtube.com/watch?v=..."
+                    value={formData.promotionalVideo}
+                    onChange={e => handleInputChange('promotionalVideo', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Refund Policy</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.refundPolicy}
+                    onChange={e => handleInputChange('refundPolicy', e.target.value)}
+                  ></textarea>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Terms & Conditions</label>
+                  <textarea
+                    className="form-textarea"
+                    value={formData.termsAndConditions}
+                    onChange={e => handleInputChange('termsAndConditions', e.target.value)}
+                  ></textarea>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Promotional Video URL (YouTube / Vimeo)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="https://youtube.com/watch?v=..."
-                  value={formData.promotionalVideo}
-                  onChange={e => handleInputChange('promotionalVideo', e.target.value)}
-                />
-              </div>
+              {/* Event Schedule Timeline Builder Card */}
+              <div className="form-section-card schedule-builder-card">
+                <div className="section-card-header">
+                  <h3 className="section-card-title">Event Schedule & Agenda</h3>
+                  <p className="section-card-subtitle">Create a timeline program for your event. Add sessions, timings, and brief details.</p>
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Refund Policy</label>
-                <textarea
-                  className="form-textarea"
-                  value={formData.refundPolicy}
-                  onChange={e => handleInputChange('refundPolicy', e.target.value)}
-                ></textarea>
-              </div>
+                <div className="schedule-form-wrapper">
+                  <div className="form-grid-3">
+                    <div className="form-group">
+                      <label className="form-label">Session Time <span className="required-star">*</span></label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. 10:00 AM or 11:30 AM - 01:00 PM"
+                        value={newSchedule.time}
+                        onChange={e => setNewSchedule(prev => ({ ...prev, time: e.target.value }))}
+                      />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="form-label">Session / Event Title <span className="required-star">*</span></label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Opening Keynote & Speaker Introduction"
+                        value={newSchedule.event}
+                        onChange={e => setNewSchedule(prev => ({ ...prev, event: e.target.value }))}
+                      />
+                    </div>
+                  </div>
 
-              <div className="form-group">
-                <label className="form-label">Terms & Conditions</label>
-                <textarea
-                  className="form-textarea"
-                  value={formData.termsAndConditions}
-                  onChange={e => handleInputChange('termsAndConditions', e.target.value)}
-                ></textarea>
+                  <div className="form-group mt-2">
+                    <label className="form-label">Session Description <span className="required-star">*</span></label>
+                    <textarea
+                      className="form-textarea"
+                      placeholder="Briefly describe what will happen during this session..."
+                      rows={2}
+                      value={newSchedule.description}
+                      onChange={e => setNewSchedule(prev => ({ ...prev, description: e.target.value }))}
+                    ></textarea>
+                  </div>
+
+                  <div className="schedule-form-actions mt-2" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    {editingScheduleIndex !== null && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                          setEditingScheduleIndex(null);
+                          setNewSchedule({ time: '', event: '', description: '' });
+                        }}
+                      >
+                        Cancel Edit
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={handleAddSchedule}
+                    >
+                      {editingScheduleIndex !== null ? '✏️ Update Session' : '＋ Add Session to Schedule'}
+                    </button>
+                  </div>
+                </div>
+
+                {formData.schedule && formData.schedule.length > 0 && (
+                  <div className="schedule-list-wrapper mt-3">
+                    <h4 className="tips-title">Current Program Agenda ({formData.schedule.length})</h4>
+                    <div className="schedule-preview-timeline">
+                      {formData.schedule.map((item, idx) => (
+                        <div key={idx} className={`schedule-preview-item ${editingScheduleIndex === idx ? 'editing' : ''}`}>
+                          <div className="schedule-preview-time-badge">{item.time}</div>
+                          <div className="schedule-preview-info">
+                            <h5>{item.event}</h5>
+                            <p>{item.description}</p>
+                          </div>
+                          <div className="schedule-preview-actions">
+                            <button
+                              type="button"
+                              className="action-icon-btn edit-btn"
+                              title="Edit Session"
+                              onClick={() => handleEditSchedule(idx)}
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              type="button"
+                              className="action-icon-btn delete-btn"
+                              title="Delete Session"
+                              onClick={() => handleRemoveSchedule(idx)}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            </>
           )}
 
           {/* STEP 6: Review & Publish */}
