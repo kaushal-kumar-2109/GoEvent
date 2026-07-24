@@ -105,6 +105,9 @@ const SendEmail = async (email, otp, tag = "register") => {
         const info = await transporter.sendMail(mailOptions);
         if (info.accepted.length > 0) return ({ status: true, message: 'Email sent successfully!', info: info });
         if (info.rejected.length > 0) return ({ status: false, message: 'Email not Send!', info: info });
+
+        console.log(info);
+        return ({ status: false, message: 'Unknown Error!', info: info});
     } catch (error) {
         console.error('Error sending email:', error);
         return ({ status: false, message: 'Failed to send email!', info: error });
