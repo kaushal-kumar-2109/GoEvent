@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
+const { BrevoClient } = require("@getbrevo/brevo");
 
+const brevo = new BrevoClient({ apiKey: process.env.BREVO_SMTP_API_KEY || process.env.BREVO_SMTP_KEY });
 // 1. Create a transporter object using Gmail SMTP
 // const transporter = nodemailer.createTransport({
 //     service: 'gmail',
@@ -90,11 +92,11 @@ const createMailOptions = (email, otp, tag) => {
     const textContent = `Hello,\n\nThank you for choosing GoEvent! Your verification code for ${actionText} is: ${otp}\n\nThis code is valid for 10 minutes. If you did not request this code, please disregard this email.\n\nBest regards,\nThe GoEvent Security Team`;
 
     return {
-        from: `"GoEvent Team" <${process.env.SMTP_USER_EMAIL}>`,
-        to: email,
+        sender: { name: "GoEvent Team", email: process.env.SMTP_USER_EMAIL },
+        to: [{ name: "User", email }],
         subject: subjectText,
         text: textContent,
-        html: htmlContent
+        htmlContent: htmlContent
     };
 };
 
@@ -102,13 +104,24 @@ const createMailOptions = (email, otp, tag) => {
 const SendEmail = async (email, otp, tag = "register") => {
     const mailOptions = createMailOptions(email, otp, tag);
     try {
-        const info = await transporter.sendMail(mailOptions);
-        if (info.accepted.length > 0) return ({ status: true, message: 'Email sent successfully!', info: info });
-        if (info.rejected.length > 0) return ({ status: false, message: 'Email not Send!', info: info });
+        const info = await brevo.transactionalEmails.sendTransacEmail(mailOptions);
+        // const info = await transporter.sendMail(mailOptions);
+        if (info.messageId) return ({ status: true, message: 'Email sent successfully!', info: info });
 
         console.log(info);
-        return ({ status: false, message: 'Unknown Error!', info: info});
+        return ({ status: false, message: 'Unknown Error!', info: info });
     } catch (error) {
+
+        // if (error instanceof UnauthorizedError) {
+        //     console.error('Invalid API key');
+        // } else if (error instanceof TooManyRequestsError) {
+        //     const retryAfter = error.rawResponse.headers['retry-after'];
+        //     console.error(`Rate limited. Retry after ${retryAfter}s`);
+        // } else if (error instanceof BrevoError) {
+        //     console.error(`API error ${error.statusCode}:`, error.message);
+        // } else {
+        //     console.error('Error sending email:', error);
+        // }
         console.error('Error sending email:', error);
         return ({ status: false, message: 'Failed to send email!', info: error });
     }
