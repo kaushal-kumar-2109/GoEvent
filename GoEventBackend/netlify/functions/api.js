@@ -1,12 +1,13 @@
 // ------------------------- configration package and file ------------------------- 
 require("dotenv").config(); // --- dotenv configration
-require("./config/db.connect.js"); // --- database configration
-require("./config/cloudynary.config.js"); // --- cloudynary configration
+require("../../config/db.connect.js"); // --- database configration
+require("../../config/cloudynary.config.js"); // --- cloudynary configration
 
 // ------------------------- Package requiring ------------------------- 
 const express = require('express');
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const serverless = require("serverless-http");
 
 // ------------------------- initialize express ------------------------- //
 const app = express();
@@ -23,10 +24,10 @@ app.use(cors({
 app.use(cookieParser());
 
 // ------------------------- import router files ------------------------- //
-const getRouter = require("./src/routers/get.router.js");
-const postRouter = require("./src/routers/post.router.js");
-const putRouter = require("./src/routers/put.router.js");
-const deleteRouter = require("./src/routers/delete.router.js");
+const getRouter = require("../../src/routers/get.router.js");
+const postRouter = require("../../src/routers/post.router.js");
+const putRouter = require("../../src/routers/put.router.js");
+const deleteRouter = require("../../src/routers/delete.router.js");
 
 // ------------------------- routes ------------------------- //
 app.use(`/api/${apiVersion}/goevent/gets`, getRouter);
@@ -50,6 +51,9 @@ app.all("/*path", (req, res) => {
 });
 
 // ------------------------- start server ------------------------- //
-app.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on port ${port}`);
-});
+// app.listen(port, '0.0.0.0', () => {
+//     console.log(`Server running on port ${port}`);
+// });
+
+module.exports = app;
+module.exports.handler = serverless(app);

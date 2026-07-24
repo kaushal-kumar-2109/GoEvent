@@ -14,9 +14,9 @@ const GetLandingEventsHandler = async (req, res) => {
 
 const GetEventsHandler = async (req, res) => {
     try {
-        // await Event.updateMany({ registrationDeadline: { $lt: new Date() } }, { status: "PENDING" });
-        // await Event.updateMany({ endDate: { $lt: new Date() } }, { status: "COMPLETED" });
-        // await Event.updateMany({ startDate: { $lte: new Date() } }, { status: "STARTED" });
+        await Event.updateMany({ registrationDeadline: { $lt: new Date() } }, { status: "PENDING" });
+        await Event.updateMany({ endDate: { $lt: new Date() } }, { status: "COMPLETED" });
+        await Event.updateMany({ startDate: { $lte: new Date() } }, { status: "STARTED" });
         const {
             search, location, status, date, category, minPrice, maxPrice, eventType, sortBy, page = 1, limit = 8
         } = req.query;
@@ -385,27 +385,20 @@ const GetOrganizerEventDetailsHandler = async (req, res) => {
     try {
         const { eid } = req.params;
         const event = await Event.findById(eid);
-        if (!event) {
-            return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
-        }
+        let note = "";
+        if (!event) return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
+        if (event.organizer.toString() !== req.user._id.toString()) return res.status(403).json({ tag: "auth", status: 403, success: false, message: "You are not authorized to view this event's details!" });
 
-        // Authorization check
-        if (event.organizer.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                tag: "auth",
-                status: 403,
-                success: false,
-                message: "You are not authorized to view this event's details!"
-            });
-        }
+        if (event.status === "STARTED" || event.status === "COMPLETED" || event.status === "CANCELLED" || event.status === "DELETED")
+            note = "You can't update event information.";
+        if (event.status === "PENDING")
+            note = `You can only update "registration Deadline", "event start date" and "event end date". If you increse the "registration date" then event status will change.`;
+        if (event.status === "PUBLISHED")
+            note = `You can't update "ticket price", "category", "event type", "refund policy", "terms and conditions" and "payment details"`;
+        if (event.status === "DRAFT")
+            note = `You can update all event information.`;
 
-        return res.status(200).json({
-            tag: "event",
-            status: 200,
-            success: true,
-            message: "Event details fetched successfully!",
-            event
-        });
+        return res.status(200).json({ tag: "event", status: 200, success: true, message: "Event details fetched successfully!", event, note });
     } catch (error) {
         console.error("GetOrganizerEventDetailsHandler Error:", error);
         return res.status(500).json({
@@ -422,111 +415,92 @@ const UpdateEventHandler = async (req, res) => {
     try {
         const { eid } = req.params;
         const event = await Event.findById(eid);
-        if (!event) {
-            return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
-        }
+        if (!event) return res.status(404).json({ tag: "event", status: 404, success: false, message: "Event not found!" });
 
         // Authorization check
-        if (event.organizer.toString() !== req.user._id.toString()) {
-            return res.status(403).json({
-                tag: "auth",
-                status: 403,
-                success: false,
-                message: "You are not authorized to edit this event!"
-            });
-        }
+        if (event.organizer.toString() !== req.user._id.toString()) return res.status(403).json({ tag: "auth", status: 403, success: false, message: "You are not authorized to edit this event!" });
+        if (req.user.role === "USER") return res.status(403).json({ tag: "role", success: false, message: "Your account is not authorized to edit events!" });
+        if (event.status === "STARTED" || event.status === "COMPLETED" || event.status === "CANCELLED" || event.status === "DELETED") return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update event!" });
 
-        if (req.user.role === "USER") {
-            return res.status(403).json({
-                tag: "role",
-                success: false,
-                message: "Your account is not authorized to edit events!"
-            });
-        }
+        const {
+            title, shortDescription, description, status, organizerName, bannerImage, thumbnailImage, galleryImages, promotionalVideo,
+            schedule, venueName, address, city, state, country, pincode, googleMapsLink, availableSeats, contactEmail, contactPhone, website, socialLinks, speakers, faqs,
+            startDate, endDate, registrationDeadline, ticketPrice, refundPolicy, termsAndConditions, eventType, category, paymentQr, paymentUPI, paymentUPIName
+        } = req.body;
 
-        const currentStatus = event.status;
+        if (event.status === "PUBLISHED" || event.status === "PENDING") {
+            if (ticketPrice !== event.ticketPrice) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update ticket price for this event!" });
+            if (category !== event.category) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update category for the Event!" });
+            if (eventType !== event.eventType) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update event type for the Event!" });
+            if (refundPolicy !== event.refundPolicy) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update refund policy for the Event!" });
+            if (termsAndConditions !== event.termsAndConditions) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update terms and conditions for the Event!" });
+            if (paymentQr !== event.paymentQr) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update payment QR for the Event!" });
+            if (paymentUPI !== event.paymentUPI) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update payment UPI for the Event!" });
+            if (paymentUPIName !== event.paymentUPIName) return res.status(400).json({ tag: "event", status: 400, success: false, message: "You can't update payment UPI name for the Event!" });
+            if (event.registrationDeadline != registrationDeadline || event.startDate != startDate || event.endDate != endDate) {
+                if (new Date(registrationDeadline) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "Registration deadline can't be before then today!" });
+                if (new Date(startDate) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "Start date can't be before then today!" });
+                if (new Date(endDate) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "End date can't be before then today!" });
+            }
 
-        // Rule: If not in DRAFT and not in PUBLISHED and not in PENDING, nothing can be changed
-        if (currentStatus !== "DRAFT" && currentStatus !== "PUBLISHED" && currentStatus !== "PENDING") {
-            return res.status(400).json({
-                tag: "status",
-                success: false,
-                message: `Events in ${currentStatus} status cannot be edited!`
-            });
-        }
-
-        // Rule: If in PENDING, only location, event dates, and registration deadline can change
-        if (currentStatus === "PENDING") {
-            const allowedFields = [
-                "venueName", "address", "city", "state", "country", "pincode", "googleMapsLink",
-                "startDate", "endDate", "registrationDeadline"
-            ];
-            const updates = Object.keys(req.body);
-            // filter out updates that represent modifications
-            const modifiedFields = updates.filter(field => req.body[field] !== undefined && String(event[field]) !== String(req.body[field]));
-            const isAllowed = modifiedFields.every(field => allowedFields.includes(field));
-            if (!isAllowed) {
-                return res.status(400).json({
-                    tag: "validation",
-                    success: false,
-                    message: "In PENDING status, only location, event dates, and registration deadline can be updated!"
-                });
+            if (event.status === "PUBLISHED") {
+                event.title = title; event.shortDescription = shortDescription; event.description = description;
+                event.organizerName = organizerName; event.bannerImage = bannerImage; event.thumbnailImage = thumbnailImage;
+                event.galleryImages = galleryImages; event.promotionalVideo = promotionalVideo; event.schedule = schedule;
+                event.venueName = venueName; event.address = address; event.city = city; event.state = state;
+                event.country = country; event.pincode = pincode; event.googleMapsLink = googleMapsLink;
+                event.availableSeats = availableSeats; event.contactEmail = contactEmail; event.contactPhone = contactPhone;
+                event.website = website; event.socialLinks = socialLinks; event.speakers = speakers; event.faqs = faqs;
+                event.registrationDeadline = registrationDeadline; event.startDate = startDate; event.endDate = endDate;
             }
         }
 
-        // Rule: If in PUBLISHED, ticketPrice cannot change
-        if (currentStatus === "PUBLISHED") {
-            if (req.body.ticketPrice !== undefined && Number(req.body.ticketPrice) !== event.ticketPrice) {
-                return res.status(400).json({
-                    tag: "validation",
-                    success: false,
-                    message: "In PUBLISHED status, ticket price cannot be changed!"
-                });
+        if (event.status === "PENDING") {
+            if (title !== event.title) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Title can't update!" });
+            if (shortDescription !== event.shortDescription) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Short description can't update!" });
+            if (description !== event.description) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Description can't update!" });
+            if (organizerName !== event.organizerName) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Organizer name can't update!" });
+            if (bannerImage !== event.bannerImage) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Banner image can't update!" });
+            if (thumbnailImage !== event.thumbnailImage) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Thumbnail image can't update!" });
+            if (galleryImages !== event.galleryImages) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Gallery images can't update!" });
+            if (promotionalVideo !== event.promotionalVideo) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Promotional video can't update!" });
+            if (schedule !== event.schedule) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Schedule can't update!" });
+            if (venueName !== event.venueName) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Venue name can't update!" });
+            if (address !== event.address) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Address can't update!" });
+            if (city !== event.city) return res.status(400).json({ tag: "email", status: 400, success: false, message: "City can't update!" });
+            if (state !== event.state) return res.status(400).json({ tag: "email", status: 400, success: false, message: "State can't update!" });
+            if (country !== event.country) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Country can't update!" });
+            if (pincode !== event.pincode) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Pincode can't update!" });
+            if (googleMapsLink !== event.googleMapsLink) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Google maps link can't update!" });
+            if (availableSeats !== event.availableSeats) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Available seats can't update!" });
+            if (contactEmail !== event.contactEmail) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Contact email can't update!" });
+            if (contactPhone !== event.contactPhone) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Contact phone can't update!" });
+            if (website !== event.website) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Website can't update!" });
+            if (socialLinks !== event.socialLinks) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Social links can't update!" });
+            if (speakers !== event.speakers) return res.status(400).json({ tag: "email", status: 400, success: false, message: "Speakers can't update!" });
+            if (faqs !== event.faqs) return res.status(400).json({ tag: "email", status: 400, success: false, message: "FAQs can't update!" });
+            if (event.registrationDeadline != registrationDeadline || event.startDate != startDate || event.endDate != endDate) {
+                if (new Date(registrationDeadline) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "Registration deadline can't be before then today!" });
+                if (new Date(startDate) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "Start date can't be before then today!" });
+                if (new Date(endDate) <= Date.now()) return res.status(400).json({ tag: "event", status: 400, success: false, message: "End date can't be before then today!" });
             }
+
+            event.registrationDeadline = registrationDeadline;
+            event.startDate = startDate;
+            event.endDate = endDate;
+            event.status = "PUBLISHED";
         }
 
-        // Validation for status transition DRAFT -> PUBLISHED
-        const newStatus = req.body.status || currentStatus;
-        if (currentStatus === "DRAFT" && newStatus === "PUBLISHED") {
-            const payQr = req.body.paymentQr || event.paymentQr;
-            const payUpi = req.body.paymentUPI || event.paymentUPI;
-            const payName = req.body.paymentUPIName || event.paymentUPIName;
-            if (!payQr || !payUpi || !payName) {
-                if (!payQr) return res.status(400).json({ tag: "paymentQr", success: false, message: "Payment QR Code is required to publish!" });
-                if (!payUpi) return res.status(400).json({ tag: "paymentUpi", success: false, message: "Payment UPI ID is required to publish!" });
-                if (!payName) return res.status(400).json({ tag: "paymentUPIName", success: false, message: "Payment UPI Name is required to publish!" });
-            }
+        if (event.status === "DRAFT") {
+            event.title = title; event.shortDescription = shortDescription;
+            event.description = description; event.organizerName = organizerName; event.bannerImage = bannerImage; event.thumbnailImage = thumbnailImage; event.galleryImages = galleryImages;
+            event.promotionalVideo = promotionalVideo; event.schedule = schedule; event.venueName = venueName; event.address = address; event.city = city;
+            event.state = state; event.country = country; event.pincode = pincode; event.googleMapsLink = googleMapsLink; event.availableSeats = availableSeats;
+            event.contactEmail = contactEmail; event.contactPhone = contactPhone; event.website = website; event.socialLinks = socialLinks; event.speakers = speakers;
+            event.faqs = faqs; event.registrationDeadline = registrationDeadline; event.startDate = startDate; event.endDate = endDate; event.ticketPrice = ticketPrice;
+            event.refundPolicy = refundPolicy; event.termsAndConditions = termsAndConditions; event.eventType = eventType; event.category = category;
+            event.paymentQr = paymentQr; event.paymentUPI = paymentUPI; event.paymentUPIName = paymentUPIName; event.status = status;
         }
-
-        // Apply updates
-        const fieldsToUpdate = [
-            "title", "shortDescription", "description", "category", "bannerImage", "thumbnailImage",
-            "galleryImages", "promotionalVideo", "eventType", "venueName", "address", "city",
-            "state", "country", "pincode", "googleMapsLink", "startDate", "endDate",
-            "registrationDeadline", "ticketPrice", "totalSeats", "availableSeats", "contactEmail",
-            "contactPhone", "website", "socialLinks", "speakers", "faqs", "refundPolicy",
-            "termsAndConditions", "paymentQr", "paymentUPI", "paymentUPIName", "schedule", "status"
-        ];
-
-        fieldsToUpdate.forEach(field => {
-            if (req.body[field] !== undefined) {
-                if (currentStatus === "PENDING") {
-                    const locationAndDateFields = [
-                        "venueName", "address", "city", "state", "country", "pincode", "googleMapsLink",
-                        "startDate", "endDate", "registrationDeadline"
-                    ];
-                    if (locationAndDateFields.includes(field)) {
-                        event[field] = req.body[field];
-                    }
-                } else if (currentStatus === "PUBLISHED") {
-                    if (field !== "ticketPrice") {
-                        event[field] = req.body[field];
-                    }
-                } else {
-                    event[field] = req.body[field];
-                }
-            }
-        });
 
         event.updatedAt = Date.now();
         await event.save();
@@ -540,24 +514,11 @@ const UpdateEventHandler = async (req, res) => {
         });
     } catch (error) {
         console.error("UpdateEventHandler Error:", error);
-        return res.status(500).json({
-            tag: "server",
-            status: 500,
-            success: false,
-            message: "Internal server error!",
-            error: error.message
-        });
+        return res.status(500).json({ tag: "server", status: 500, success: false, message: "Internal server error!", error: error.message });
     }
 };
 
 module.exports = {
-    GetLandingEventsHandler,
-    GetEventsHandler,
-    GetEventDetailsHandler,
-    UploadImageHandler,
-    CreateEventHandler,
-    GetOrganizerEventsHandler,
-    DeleteEventHandler,
-    GetOrganizerEventDetailsHandler,
-    UpdateEventHandler
+    GetLandingEventsHandler, GetEventsHandler, GetEventDetailsHandler, UploadImageHandler, CreateEventHandler, GetOrganizerEventsHandler,
+    DeleteEventHandler, GetOrganizerEventDetailsHandler, UpdateEventHandler
 }
