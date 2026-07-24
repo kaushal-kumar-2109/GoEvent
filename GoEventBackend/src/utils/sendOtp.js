@@ -11,7 +11,7 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
     host: process.env.BREVO_SMTP,         // From your Brevo screen
     port: process.env.BREVO_PORT,                            // From your Brevo screen
-    secure: false,                        // MUST be false for port 587 (TLS upgrade)
+    secure: (!process.env.BREVO_PORT == 587),                        // MUST be false for port 587 (TLS upgrade)
     auth: {
         user: process.env.BREVO_LOGIN,    // Your exact Login from the screen
         pass: process.env.BREVO_SMTP_KEY,    // The secret password key you copied in Step 1
