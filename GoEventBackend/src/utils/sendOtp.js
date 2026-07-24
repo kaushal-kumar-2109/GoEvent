@@ -1,11 +1,23 @@
 const nodemailer = require("nodemailer");
 
 // 1. Create a transporter object using Gmail SMTP
+// const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     auth: {
+//         user: process.env.SMTP_USER_EMAIL,
+//         pass: process.env.SMTP_USER_PASS
+//     }
+// });
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.BREVO_SMTP,         // From your Brevo screen
+    port: process.env.BREVO_PORT,                            // From your Brevo screen
+    secure: false,                        // MUST be false for port 587 (TLS upgrade)
     auth: {
-        user: process.env.SMTP_USER_EMAIL,
-        pass: process.env.SMTP_USER_PASS
+        user: process.env.BREVO_LOGIN,    // Your exact Login from the screen
+        pass: process.env.BREVO_SMTP_KEY,    // The secret password key you copied in Step 1
+    },
+    tls: {
+        rejectUnauthorized: false           // Crucial to prevent Render network blockages
     }
 });
 
@@ -78,7 +90,7 @@ const createMailOptions = (email, otp, tag) => {
     const textContent = `Hello,\n\nThank you for choosing GoEvent! Your verification code for ${actionText} is: ${otp}\n\nThis code is valid for 10 minutes. If you did not request this code, please disregard this email.\n\nBest regards,\nThe GoEvent Security Team`;
 
     return {
-        from: '"GoEvent Team" <goevent.service@gmail.com>',
+        from: `"GoEvent Team" <${process.env.SMTP_USER_EMAIL}>`,
         to: email,
         subject: subjectText,
         text: textContent,
@@ -91,8 +103,8 @@ const SendEmail = async (email, otp, tag = "register") => {
     const mailOptions = createMailOptions(email, otp, tag);
     try {
         const info = await transporter.sendMail(mailOptions);
-        console.log();
-        return ({ status: true, message: 'Email sent successfully!', info: info.messageId });
+        if (info.accepted.length > 0) return ({ status: true, message: 'Email sent successfully!', info: info });
+        if (info.rejected.length > 0) return ({ status: false, message: 'Email not Send!', info: info });
     } catch (error) {
         console.error('Error sending email:', error);
         return ({ status: false, message: 'Failed to send email!', info: error });
